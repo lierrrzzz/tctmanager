@@ -1471,24 +1471,42 @@ function renderPrevision(){
     h+=renderPrevMonths(type,id,y,cm,'var(--accent)');
   } else if(type==='income'){
     const inc=S.incomes.find(x=>x.id===id);if(!inc)return;
-    const totalY=MES_S.reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
-    const earned=MES_S.slice(0,cm+1).reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
-    h+='<div class="prev-card">';
-    h+='<div class="prev-title">'+(inc.emoji||'💼')+' '+inc.name+'</div>';
-    h+='<div class="prev-amount">'+fmt(totalY)+'</div>';
-    h+='<div class="prev-sub">Total anual previsto '+y+(inc.isSalary?' · Salario':'')+'</div>';
-    h+='<div class="prev-stats"><div><div class="prev-stat-label">Base/mes</div><div class="prev-stat-val">'+fmt(inc.amount)+'</div></div><div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(earned)+'</div></div><div><div class="prev-stat-label">Restante</div><div class="prev-stat-val">'+fmt(totalY-earned)+'</div></div></div>';
-    h+='<div class="months-dots">'+MES_S.map(function(ms,i){
-      const key=y+'-'+i+'-income-'+id;
+    const isVariable=!inc.amount||inc.amount===0;
+    // Real transactions for this income source this year
+    const realTxs=S.transactions.filter(function(t){
+      return t.type==='income'&&t.date&&t.date.startsWith(String(year))&&t.desc===inc.name;
+    });
+    const realEarned=realTxs.reduce(function(s,t){return s+t.amount;},0);
+    const totalY=isVariable?realEarned:MES_S.reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
+    const earned=isVariable?realEarned:MES_S.slice(0,cm+1).reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
+    const monthsGrid=MES_S.map(function(ms,i){
+      const key=year+'-'+i+'-income-'+id;
       const done=!!S.status[key];
       const isPast=i<cm;const isCur=i===cm;
       const cls=isPast?'past':done?'done':isCur?'current':'';
-      const isDouble=inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(i);
+      const isDouble=inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(i)&&S.overrides['income-'+inc.id+'-'+i]===undefined;
       return '<div class="mdot"><div class="mdot-circle '+cls+'">'+(isPast||done?'✓':isDouble?'★':i+1)+'</div><div class="mdot-label">'+ms+'</div></div>';
-    }).join('')+'</div>';
+    }).join('');
+    h+='<div class="prev-card">';
+    h+='<div class="prev-title">'+(inc.emoji||'💼')+' '+inc.name+'</div>';
+    h+='<div class="prev-amount">'+fmt(totalY)+'</div>';
+    h+='<div class="prev-sub">'+(isVariable?'Ingresos acumulados '+year:'Total anual previsto '+year)+(inc.isSalary?' · Salario':'')+'</div>';
+    h+='<div class="prev-stats">';
+    if(isVariable){
+      h+='<div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(realEarned)+'</div></div>';
+      h+='<div><div class="prev-stat-label">Registros</div><div class="prev-stat-val">'+realTxs.length+'</div></div>';
+      h+='<div><div class="prev-stat-label">Promedio</div><div class="prev-stat-val">'+(realTxs.length?fmt(realEarned/realTxs.length):'0,00 €')+'</div></div>';
+    } else {
+      h+='<div><div class="prev-stat-label">Base/mes</div><div class="prev-stat-val">'+fmt(inc.amount)+'</div></div>';
+      h+='<div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(earned)+'</div></div>';
+      h+='<div><div class="prev-stat-label">Restante</div><div class="prev-stat-val">'+fmt(totalY-earned)+'</div></div>';
+    }
     h+='</div>';
-    h+=renderPrevMonths(type,id,y,cm,'var(--green)');
-  } else if(type==='expense'){
+    if(!isVariable)h+='<div class="months-dots">'+monthsGrid+'</div>';
+    h+='</div>';
+    h+=renderPrevMonths(type,id,year,curMonth);
+
+    } else if(type==='expense'){
     const exp=S.expenses.find(x=>x.id===id);if(!exp)return;
     const totalY=MES_S.reduce((s,_,i)=>{const ov=S.overrides['expense-'+id+'-'+i];return s+(ov!==undefined?ov:exp.amount);},0);
     const spent=MES_S.slice(0,cm+1).reduce((s,_,i)=>{const ov=S.overrides['expense-'+id+'-'+i];return s+(ov!==undefined?ov:exp.amount);},0);
