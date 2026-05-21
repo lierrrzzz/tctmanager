@@ -523,7 +523,7 @@ input,select{font-family:'Inter',sans-serif;}
     <div></div>
   </div>
   <div class="prev-select">
-    <select class="fi" id="prevSelect" onchange="renderPrevision()"><option value="">Selecciona un activo...</option></select>
+    <select class="fi" id="prevSelect"><option value="">Selecciona un activo...</option></select>
   </div>
   <div id="prevContent"></div>
 </div>
@@ -774,7 +774,7 @@ function saveTx(){
 // ─── TRANSFER ────────────────────────────────────────────────────────────────
 function openTransfer(){
   const opts=S.pockets.map(p=>'<option value="'+p.id+'">'+p.emoji+' '+p.name+'</option>').join('');
-  document.getElementById('trFrom').innerHTML='<option value="">Selecciona...</option>'+opts;
+  document.getElementById('trFrom').innerHTML='<option value="">Selecciona...</option><option value="__general__">💼 General (fuera de pockets)</option>'+opts;
   document.getElementById('trTo').innerHTML='<option value="">Selecciona...</option>'+opts;
   document.getElementById('trAmt').value='';
   document.getElementById('trDate').value=today();
@@ -787,11 +787,12 @@ function saveTransfer(){
   const from=document.getElementById('trFrom').value;
   const to=document.getElementById('trTo').value;
   if(!to)return;
-  const fromP=S.pockets.find(p=>p.id===from);
+  const isGeneral=from==='__general__';
+  const fromP=isGeneral?{name:'General'}:S.pockets.find(p=>p.id===from);
   const toP=S.pockets.find(p=>p.id===to);
   const desc='Transfer'+(fromP?' de '+fromP.name:'')+(toP?' a '+toP.name:'');
   const date=document.getElementById('trDate').value||today();
-  S.transactions.push({id:uid(),type:'transfer',amount:amt,desc,date,pocket:to,fromPocket:from,paid:false});
+  S.transactions.push({id:uid(),type:'transfer',amount:amt,desc,date,pocket:to,fromPocket:isGeneral?null:from,paid:false});
   save();closeModal('mTransfer');renderDashboard();
 }
 
@@ -1975,6 +1976,7 @@ renderDashboard();
 if(Notification&&Notification.permission==='granted'&&(S.notifDay||S.notifTime))scheduleNotif();
 
 initDelegation();
+document.getElementById('prevSelect').addEventListener('change',renderPrevision);
 document.getElementById('mEditAmtSave').addEventListener('click',saveGEdit);
 document.getElementById('mEditAmtCancel').addEventListener('click',cancelGEdit);
 // FAB buttons - use addEventListener to work in Safari mobile
