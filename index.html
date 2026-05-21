@@ -1445,6 +1445,8 @@ function renderPrevision(){
   if(!val){document.getElementById('prevContent').innerHTML='';return;}
   const parts=val.split('::');
   const type=parts[0],id=parts[1];
+  // Reset edit mode when switching activo
+  if(prevCtx.type!==type||prevCtx.id!==id)prevEditMode=false;
   prevCtx={type,id};
   const y=nowY(),cm=nowM();
 
