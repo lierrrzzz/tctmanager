@@ -1600,6 +1600,33 @@ function togglePrevEdit(){
 }
 
 
+// ─── START DATE ───────────────────────────────────────────────────────────────
+function saveStartDate(){
+  const val=document.getElementById('startDateInput').value;
+  S.startDate=val||null;
+  if(S.startDate){
+    const start=new Date(S.startDate);
+    const startY=start.getFullYear(),startM=start.getMonth();
+    const curY=nowY(),curM=nowM();
+    for(var y=startY;y<=curY;y++){
+      var mStart=(y===startY)?startM:0;
+      var mEnd=(y===curY)?curM-1:11;
+      for(var m=mStart;m<=mEnd;m++){
+        S.pockets.forEach(function(p){if(p.monthly>0){var k=y+'-'+m+'-pocket-'+p.id;if(!S.status[k])S.status[k]=true;}});
+        S.incomes.filter(function(i){return i.amount>0;}).forEach(function(inc){var k=y+'-'+m+'-income-'+inc.id;if(!S.status[k])S.status[k]=true;});
+        S.expenses.forEach(function(exp){var k=y+'-'+m+'-expense-'+exp.id;if(!S.status[k])S.status[k]=true;});
+      }
+    }
+  }
+  save();renderMensual();renderGestion();renderDashboard();
+}
+
+function isBeforeStart(y,m){
+  if(!S.startDate)return false;
+  const start=new Date(S.startDate);
+  return y<start.getFullYear()||(y===start.getFullYear()&&m<start.getMonth());
+}
+
 // ─── GESTIONAR EDIT ──────────────────────────────────────────────────────────
 function _ga_call(i){if(window._gActions&&window._gActions[i]){var a=window._gActions[i];openAmtModal(a.type,a.id,a.month,a.amt);}}
 function openAmtModal(type,id,month,currentAmt){
@@ -1722,16 +1749,17 @@ function importCSV(e){
   r.onload=function(ev){
     try{
       const data=JSON.parse(ev.target.result);
-      if(data.version===2){
-        // Full JSON backup restore
+      // Accept any JSON backup regardless of version field
+      if(data.pockets||data.incomes||data.transactions){
         if(!confirm('Esto reemplazará TODOS tus datos actuales con la copia de seguridad. ¿Continuar?'))return;
-        S.pockets=data.pockets||[];
-        S.incomes=data.incomes||[];
-        S.expenses=data.expenses||[];
-        S.transactions=data.transactions||[];
-        S.status=data.status||{};
-        S.overrides=data.overrides||{};
-        S.notas=data.notas||{};
+        S.pockets=data.pockets||S.pockets||[];
+        S.incomes=data.incomes||S.incomes||[];
+        S.expenses=data.expenses||S.expenses||[];
+        S.transactions=data.transactions||S.transactions||[];
+        S.status=data.status||S.status||{};
+        S.overrides=data.overrides||S.overrides||{};
+        S.notas=data.notas||S.notas||{};
+        S.startDate=data.startDate||S.startDate||null;
         if(data.theme)S.theme=data.theme;
         S.lastImport=new Date().toISOString();
         save();
