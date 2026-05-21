@@ -525,7 +525,7 @@ input,select{font-family:'Inter',sans-serif;}
   <div class="prev-select">
     <select class="fi" id="prevSelect"><option value="">Selecciona un activo...</option></select>
   </div>
-  <div id="prevContent"></div>
+  <div id="prevContent" style="padding-bottom:20px;"></div>
 </div>
 
 <!-- PAGE: NOTAS -->
@@ -1475,7 +1475,7 @@ function renderPrevision(){
     const isVariable=!inc.amount||inc.amount===0;
     // Real transactions for this income source this year
     const realTxs=S.transactions.filter(function(t){
-      return t.type==='income'&&t.date&&t.date.startsWith(String(year))&&t.desc===inc.name;
+      return t.type==='income'&&t.date&&t.date.startsWith(String(y))&&t.desc===inc.name;
     });
     const realEarned=realTxs.reduce(function(s,t){return s+t.amount;},0);
     const totalY=isVariable?realEarned:MES_S.reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
@@ -1491,7 +1491,7 @@ function renderPrevision(){
     h+='<div class="prev-card">';
     h+='<div class="prev-title">'+(inc.emoji||'💼')+' '+inc.name+'</div>';
     h+='<div class="prev-amount">'+fmt(totalY)+'</div>';
-    h+='<div class="prev-sub">'+(isVariable?'Ingresos acumulados '+year:'Total anual previsto '+year)+(inc.isSalary?' · Salario':'')+'</div>';
+    h+='<div class="prev-sub">'+(isVariable?'Ingresos acumulados '+y:'Total anual previsto '+y)+(inc.isSalary?' · Salario':'')+'</div>';
     h+='<div class="prev-stats">';
     if(isVariable){
       h+='<div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(realEarned)+'</div></div>';
@@ -1505,7 +1505,7 @@ function renderPrevision(){
     h+='</div>';
     if(!isVariable)h+='<div class="months-dots">'+monthsGrid+'</div>';
     h+='</div>';
-    h+=renderPrevMonths(type,id,year,curMonth);
+    h+=renderPrevMonths(type,id,y,cm);
 
     } else if(type==='expense'){
     const exp=S.expenses.find(x=>x.id===id);if(!exp)return;
