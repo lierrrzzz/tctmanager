@@ -523,9 +523,9 @@ input,select{font-family:'Inter',sans-serif;}
     <div></div>
   </div>
   <div class="prev-select">
-    <select class="fi" id="prevSelect"><option value="">Selecciona un activo...</option></select>
+    <select class="fi" id="prevSelect" onchange="renderPrevision()"><option value="">Selecciona un activo...</option></select>
   </div>
-  <div id="prevContent" style="padding-bottom:20px;"></div>
+  <div id="prevContent"></div>
 </div>
 
 <!-- PAGE: NOTAS -->
@@ -774,7 +774,7 @@ function saveTx(){
 // ─── TRANSFER ────────────────────────────────────────────────────────────────
 function openTransfer(){
   const opts=S.pockets.map(p=>'<option value="'+p.id+'">'+p.emoji+' '+p.name+'</option>').join('');
-  document.getElementById('trFrom').innerHTML='<option value="">Selecciona...</option><option value="__general__">💼 General (fuera de pockets)</option>'+opts;
+  document.getElementById('trFrom').innerHTML='<option value="">Selecciona...</option>'+opts;
   document.getElementById('trTo').innerHTML='<option value="">Selecciona...</option>'+opts;
   document.getElementById('trAmt').value='';
   document.getElementById('trDate').value=today();
@@ -787,12 +787,11 @@ function saveTransfer(){
   const from=document.getElementById('trFrom').value;
   const to=document.getElementById('trTo').value;
   if(!to)return;
-  const isGeneral=from==='__general__';
-  const fromP=isGeneral?{name:'General'}:S.pockets.find(p=>p.id===from);
+  const fromP=S.pockets.find(p=>p.id===from);
   const toP=S.pockets.find(p=>p.id===to);
   const desc='Transfer'+(fromP?' de '+fromP.name:'')+(toP?' a '+toP.name:'');
   const date=document.getElementById('trDate').value||today();
-  S.transactions.push({id:uid(),type:'transfer',amount:amt,desc,date,pocket:to,fromPocket:isGeneral?null:from,paid:false});
+  S.transactions.push({id:uid(),type:'transfer',amount:amt,desc,date,pocket:to,fromPocket:from,paid:false});
   save();closeModal('mTransfer');renderDashboard();
 }
 
@@ -1432,7 +1431,6 @@ let prevCtx={type:'',id:''};
 
 function renderPrevSelect(){
   prevEditMode=false;
-  prevCtx={type:'',id:''};
   const opts=['<option value="">Selecciona un activo...</option>'];
   S.pockets.forEach(p=>opts.push('<option value="pocket::'+p.id+'">'+p.emoji+' '+p.name+' (Pocket)</option>'));
   S.incomes.forEach(i=>opts.push('<option value="income::'+i.id+'">'+(i.emoji||'💼')+' '+i.name+' (Ingreso)</option>'));
@@ -1446,14 +1444,12 @@ function renderPrevision(){
   if(!val){document.getElementById('prevContent').innerHTML='';return;}
   const parts=val.split('::');
   const type=parts[0],id=parts[1];
-  if(prevCtx.type!==type||prevCtx.id!==id)prevEditMode=false;
   prevCtx={type,id};
   const y=nowY(),cm=nowM();
-  let h='';
 
+  let h='';
   if(type==='pocket'){
-    const p=S.pockets.find(x=>x.id===id);
-    if(!p)return;
+    const p=S.pockets.find(x=>x.id===id);if(!p)return;
     const bal=pocketBalance(p);
     let prevFinal=bal;
     const keyC=y+'-'+cm+'-pocket-'+id;
@@ -1463,113 +1459,93 @@ function renderPrevision(){
     h+='<div class="prev-title">'+p.emoji+' '+p.name+'</div>';
     h+='<div class="prev-amount">'+fmt(prevFinal)+'</div>';
     h+='<div class="prev-sub">Previsión a 31 dic '+y+'</div>';
-    h+='<div class="prev-stats"><div><div class="prev-stat-label">Saldo actual</div><div class="prev-stat-val">'+fmt(bal)+'</div></div>';
-    h+='<div><div class="prev-stat-label">/mes</div><div class="prev-stat-val">'+fmt(p.monthly||0)+'</div></div>';
-    h+='<div><div class="prev-stat-label">Meses rest.</div><div class="prev-stat-val">'+(11-cm)+'</div></div></div>';
+    h+='<div class="prev-stats"><div><div class="prev-stat-label">Saldo actual</div><div class="prev-stat-val">'+fmt(bal)+'</div></div><div><div class="prev-stat-label">/mes</div><div class="prev-stat-val">'+fmt(p.monthly||0)+'</div></div><div><div class="prev-stat-label">Meses rest.</div><div class="prev-stat-val">'+(11-cm)+'</div></div></div>';
     h+='<div class="months-dots">'+MES_S.map(function(ms,i){
       const key=y+'-'+i+'-pocket-'+id;
-      const done=!!S.status[key];const isPast=i<cm;const isCur=i===cm;
+      const done=!!S.status[key];
+      const isPast=i<cm;const isCur=i===cm;
       const cls=isPast?'past':done?'done':isCur?'current':'';
       return '<div class="mdot"><div class="mdot-circle '+cls+'">'+(isPast||done?'✓':i+1)+'</div><div class="mdot-label">'+ms+'</div></div>';
-    }).join('')+'</div></div>';
-    h+=buildPrevMonthList(type,id,y,cm,'var(--accent)');
-
+    }).join('')+'</div>';
+    h+='</div>';
+    h+=renderPrevMonths(type,id,y,cm,'var(--accent)');
   } else if(type==='income'){
-    const inc=S.incomes.find(x=>x.id===id);
-    if(!inc)return;
-    const isVariable=!inc.amount||inc.amount===0;
-    const realTxs=S.transactions.filter(function(t){
-      return t.type==='income'&&t.date&&t.date.startsWith(String(y))&&t.desc===inc.name;
-    });
-    const realEarned=realTxs.reduce(function(s,t){return s+t.amount;},0);
-    const totalY=isVariable?realEarned:MES_S.reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
-    const earned=isVariable?realEarned:MES_S.slice(0,cm+1).reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
+    const inc=S.incomes.find(x=>x.id===id);if(!inc)return;
+    const totalY=MES_S.reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
+    const earned=MES_S.slice(0,cm+1).reduce((s,_,i)=>s+incomeForMonthWithOverride(inc,i),0);
     h+='<div class="prev-card">';
     h+='<div class="prev-title">'+(inc.emoji||'💼')+' '+inc.name+'</div>';
     h+='<div class="prev-amount">'+fmt(totalY)+'</div>';
-    h+='<div class="prev-sub">'+(isVariable?'Ingresos acumulados '+y:'Total anual previsto '+y)+(inc.isSalary?' · Salario':'')+'</div>';
-    h+='<div class="prev-stats">';
-    if(isVariable){
-      h+='<div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(realEarned)+'</div></div>';
-      h+='<div><div class="prev-stat-label">Registros</div><div class="prev-stat-val">'+realTxs.length+'</div></div>';
-      h+='<div><div class="prev-stat-label">Promedio</div><div class="prev-stat-val">'+(realTxs.length?fmt(realEarned/realTxs.length):'0,00 €')+'</div></div>';
-    } else {
-      h+='<div><div class="prev-stat-label">Base/mes</div><div class="prev-stat-val">'+fmt(inc.amount)+'</div></div>';
-      h+='<div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(earned)+'</div></div>';
-      h+='<div><div class="prev-stat-label">Restante</div><div class="prev-stat-val">'+fmt(totalY-earned)+'</div></div>';
-    }
+    h+='<div class="prev-sub">Total anual previsto '+y+(inc.isSalary?' · Salario':'')+'</div>';
+    h+='<div class="prev-stats"><div><div class="prev-stat-label">Base/mes</div><div class="prev-stat-val">'+fmt(inc.amount)+'</div></div><div><div class="prev-stat-label">Acumulado</div><div class="prev-stat-val green">'+fmt(earned)+'</div></div><div><div class="prev-stat-label">Restante</div><div class="prev-stat-val">'+fmt(totalY-earned)+'</div></div></div>';
+    h+='<div class="months-dots">'+MES_S.map(function(ms,i){
+      const key=y+'-'+i+'-income-'+id;
+      const done=!!S.status[key];
+      const isPast=i<cm;const isCur=i===cm;
+      const cls=isPast?'past':done?'done':isCur?'current':'';
+      const isDouble=inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(i);
+      return '<div class="mdot"><div class="mdot-circle '+cls+'">'+(isPast||done?'✓':isDouble?'★':i+1)+'</div><div class="mdot-label">'+ms+'</div></div>';
+    }).join('')+'</div>';
     h+='</div>';
-    if(!isVariable){
-      h+='<div class="months-dots">'+MES_S.map(function(ms,i){
-        const key=y+'-'+i+'-income-'+id;
-        const done=!!S.status[key];const isPast=i<cm;const isCur=i===cm;
-        const cls=isPast?'past':done?'done':isCur?'current':'';
-        const isDouble=inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(i)&&S.overrides['income-'+id+'-'+i]===undefined;
-        return '<div class="mdot"><div class="mdot-circle '+cls+'">'+(isPast||done?'✓':isDouble?'★':i+1)+'</div><div class="mdot-label">'+ms+'</div></div>';
-      }).join('')+'</div>';
-      h+=buildPrevMonthList(type,id,y,cm,'var(--green)');
-    }
-    h+='</div>';
-
+    h+=renderPrevMonths(type,id,y,cm,'var(--green)');
   } else if(type==='expense'){
-    const exp=S.expenses.find(x=>x.id===id);
-    if(!exp)return;
+    const exp=S.expenses.find(x=>x.id===id);if(!exp)return;
     const totalY=MES_S.reduce((s,_,i)=>{const ov=S.overrides['expense-'+id+'-'+i];return s+(ov!==undefined?ov:exp.amount);},0);
     const spent=MES_S.slice(0,cm+1).reduce((s,_,i)=>{const ov=S.overrides['expense-'+id+'-'+i];return s+(ov!==undefined?ov:exp.amount);},0);
+    // (expense overrides already correct)
     const pocket=exp.pocket?S.pockets.find(p=>p.id===exp.pocket):null;
     h+='<div class="prev-card">';
     h+='<div class="prev-title">'+(exp.emoji||'📦')+' '+exp.name+'</div>';
     h+='<div class="prev-amount" style="color:var(--red)">'+fmt(totalY)+'</div>';
     h+='<div class="prev-sub">Gasto fijo anual '+y+(pocket?' · '+pocket.emoji+' '+pocket.name:'')+'</div>';
-    h+='<div class="prev-stats"><div><div class="prev-stat-label">/mes</div><div class="prev-stat-val">'+fmt(exp.amount)+'</div></div>';
-    h+='<div><div class="prev-stat-label">Gastado</div><div class="prev-stat-val red">'+fmt(spent)+'</div></div>';
-    h+='<div><div class="prev-stat-label">Restante</div><div class="prev-stat-val">'+fmt(totalY-spent)+'</div></div></div>';
+    h+='<div class="prev-stats"><div><div class="prev-stat-label">/mes</div><div class="prev-stat-val">'+fmt(exp.amount)+'</div></div><div><div class="prev-stat-label">Gastado</div><div class="prev-stat-val red">'+fmt(spent)+'</div></div><div><div class="prev-stat-label">Restante</div><div class="prev-stat-val">'+fmt(totalY-spent)+'</div></div></div>';
     h+='<div class="months-dots">'+MES_S.map(function(ms,i){
       const key=y+'-'+i+'-expense-'+id;
-      const done=!!S.status[key];const isPast=i<cm;const isCur=i===cm;
+      const done=!!S.status[key];
+      const isPast=i<cm;const isCur=i===cm;
       const cls=isPast?'past':done?'done':isCur?'current':'';
       return '<div class="mdot"><div class="mdot-circle '+cls+'">'+(isPast||done?'✓':i+1)+'</div><div class="mdot-label">'+ms+'</div></div>';
     }).join('')+'</div>';
-    h+=buildPrevMonthList(type,id,y,cm,'var(--red)');
     h+='</div>';
+    h+=renderPrevMonths(type,id,y,cm,'var(--red)');
   }
 
   document.getElementById('prevContent').innerHTML=h;
-  // Attach edit button via DOM (Safari safe)
+  // Inject real button to avoid CSP issues with inline onclick
   var slot=document.getElementById('prevEditBtnSlot');
   if(slot){
-    var btn=document.createElement('button');
-    btn.className='prev-edit-toggle';
-    btn.textContent=prevEditMode?'✓ Listo':'✏️ Editar importes';
-    btn.addEventListener('click',togglePrevEdit);
-    slot.appendChild(btn);
+    var editBtn=document.createElement('button');
+    editBtn.className='prev-edit-toggle';
+    editBtn.textContent=prevEditMode?'✓ Listo':'✏️ Editar importes';
+    editBtn.addEventListener('click',togglePrevEdit);
+    slot.appendChild(editBtn);
   }
 }
 
-function buildPrevMonthList(type,id,y,cm,color){
-  var h='<div class="prev-edit-row"><div id="prevEditBtnSlot"></div></div>';
+function renderPrevMonths(type,id,y,cm,color){
+  let h='<div class="prev-edit-row"><div id="prevEditBtnSlot"></div></div>';
   h+='<div class="prev-month-list">';
-  for(var i=0;i<12;i++){
-    var isPast=i<cm,isCur=i===cm;
-    var key=y+'-'+i+'-'+type+'-'+id;
-    var done=!!S.status[key];
-    var cls='pm-check',cc=String(i+1);
+  for(let i=0;i<12;i++){
+    const isPast=i<cm;const isCur=i===cm;
+    const key=y+'-'+i+'-'+type+'-'+id;
+    const done=!!S.status[key];
+    let cls='pm-check',cc=String(i+1);
     if(isPast){cls='pm-check past';cc='✓';}
     else if(done){cls='pm-check done';cc='✓';}
-    var ovKey=(type==='pocket'?'pocket-'+id:type+'-'+id)+'-'+i;
-    var hasOv=S.overrides[ovKey]!==undefined;
-    var amt;
-    if(type==='pocket'){var p2=S.pockets.find(x=>x.id===id);var ov=S.overrides['pocket-'+id+'-'+i];amt=(ov!==undefined?ov:(p2?p2.monthly||0:0))*pocketMultForMonth(i);}
-    else if(type==='income'){var inc2=S.incomes.find(x=>x.id===id);amt=inc2?incomeForMonthWithOverride(inc2,i):0;}
-    else{var exp2=S.expenses.find(x=>x.id===id);var ovE=S.overrides['expense-'+id+'-'+i];amt=ovE!==undefined?ovE:(exp2?exp2.amount:0);}
-    var canEdit=prevEditMode&&!isPast&&!done;
-    var amtColor=hasOv?'var(--purple)':color;
-    var amtH=canEdit
-      ?'<input class="pm-input" data-month="'+i+'" data-type="'+type+'" data-id="'+id+'" type="number" value="'+amt+'" step="0.01" min="0">'
-      :'<span class="pm-amt" style="color:'+amtColor+'">'+fmt(amt)+(hasOv?' ✎':'')+'</span>';
-    h+='<div class="pm-item"><div class="'+cls+'">'+cc+'</div>';
-    h+='<div class="pm-name">'+(isCur?'<strong>':'')+MES[i]+(isCur?'</strong>':'')+'</div>';
-    h+=amtH+'</div>';
+    let amt;
+    if(type==='pocket'){const ov=S.overrides['pocket-'+id+'-'+i];const mult=pocketMultForMonth(i);amt=(ov!==undefined?ov:(S.pockets.find(x=>x.id===id)||{monthly:0}).monthly||0)*mult;}
+    else if(type==='income'){const inc=S.incomes.find(x=>x.id===id);amt=inc?incomeForMonthWithOverride(inc,i):0;}
+    else{const exp=S.expenses.find(x=>x.id===id);amt=exp?exp.amount:0;}
+    // Check if this month has an override
+    const ovKey=(type==='pocket'?'pocket-'+id:type+'-'+id)+'-'+i;
+    const hasOverride=S.overrides[ovKey]!==undefined;
+    // x2 label for income double months
+    let x2Label='';
+    if(type==='income'){const inc2=S.incomes.find(x=>x.id===id);if(inc2&&inc2.hasDouble&&inc2.doubleMonths&&inc2.doubleMonths.includes(i)&&!hasOverride)x2Label=' <span style="font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:2px 5px;border-radius:4px;">x2</span>';}
+    const amtColor=hasOverride?'var(--purple)':color;
+    const canEdit=prevEditMode&&!isPast&&!done;
+    let amtH=canEdit?'<input class="pm-input" data-month="'+i+'" data-type="'+type+'" data-id="'+id+'" type="number" value="'+amt+'" step="0.01" min="0">':'<span class="pm-amt" style="color:'+amtColor+';font-weight:'+(hasOverride?'800':'700')+';">'+fmt(amt)+(hasOverride?' ✎':'')+'</span>';
+    h+='<div class="pm-item"><div class="'+cls+'">'+cc+'</div><div class="pm-name">'+(isCur?'<strong>':'')+MES[i]+(isCur?'</strong>':'')+x2Label+'</div>'+amtH+'</div>';
   }
   h+='</div>';
   return h;
@@ -1578,18 +1554,29 @@ function buildPrevMonthList(type,id,y,cm,color){
 function togglePrevEdit(){
   if(prevEditMode){
     document.querySelectorAll('.pm-input').forEach(function(inp){
-      var i=parseInt(inp.getAttribute('data-month'));
-      var t=inp.getAttribute('data-type');
-      var id2=inp.getAttribute('data-id');
-      var val=parseFloat(inp.value);
+      const i=parseInt(inp.getAttribute('data-month'));
+      const t=inp.getAttribute('data-type');
+      const id=inp.getAttribute('data-id');
+      const val=parseFloat(inp.value);
       if(isNaN(val)||val<0)return;
-      var def=0;
-      if(t==='pocket'){var p=S.pockets.find(x=>x.id===id2);def=(p?p.monthly||0:0)*pocketMultForMonth(i);}
-      else if(t==='income'){var inc=S.incomes.find(x=>x.id===id2);if(inc)def=(inc.isSalary&&inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(i))?inc.amount*2:inc.amount;}
-      else{var exp=S.expenses.find(x=>x.id===id2);def=exp?exp.amount:0;}
-      var ovKey=(t==='pocket'?'pocket-'+id2:t+'-'+id2)+'-'+i;
-      if(Math.abs(val-def)>0.001)S.overrides[ovKey]=val;
-      else delete S.overrides[ovKey];
+      // Calculate the default value for this month (without override)
+      let def=0;
+      if(t==='pocket'){const p=S.pockets.find(x=>x.id===id);def=(p?p.monthly||0:0)*pocketMultForMonth(i);}
+      else if(t==='income'){
+        const inc=S.incomes.find(x=>x.id===id);
+        if(inc){
+          // Default without override
+          def=(inc.isSalary&&inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(i))?inc.amount*2:inc.amount;
+        }
+      }
+      else if(t==='expense'){const exp=S.expenses.find(x=>x.id===id);def=exp?exp.amount:0;}
+      // Only save override if different from default
+      if(Math.abs(val-def)>0.001){
+        S.overrides[t+'-'+id+'-'+i]=val;
+      } else {
+        // Remove override if same as default (cleanup)
+        delete S.overrides[t+'-'+id+'-'+i];
+      }
     });
     save();
     prevEditMode=false;
@@ -1599,38 +1586,65 @@ function togglePrevEdit(){
   renderPrevision();
 }
 
-
 // ─── START DATE ───────────────────────────────────────────────────────────────
 function saveStartDate(){
   const val=document.getElementById('startDateInput').value;
   S.startDate=val||null;
   if(S.startDate){
+    // Auto-mark all past months from start date up to (not including) current month
     const start=new Date(S.startDate);
-    const startY=start.getFullYear(),startM=start.getMonth();
-    const curY=nowY(),curM=nowM();
+    const startY=start.getFullYear();
+    const startM=start.getMonth();
+    const curY=nowY();
+    const curM=nowM();
+    // Loop through all months from start to last month
     for(var y=startY;y<=curY;y++){
       var mStart=(y===startY)?startM:0;
       var mEnd=(y===curY)?curM-1:11;
       for(var m=mStart;m<=mEnd;m++){
-        S.pockets.forEach(function(p){if(p.monthly>0){var k=y+'-'+m+'-pocket-'+p.id;if(!S.status[k])S.status[k]=true;}});
-        S.incomes.filter(function(i){return i.amount>0;}).forEach(function(inc){var k=y+'-'+m+'-income-'+inc.id;if(!S.status[k])S.status[k]=true;});
-        S.expenses.forEach(function(exp){var k=y+'-'+m+'-expense-'+exp.id;if(!S.status[k])S.status[k]=true;});
+        // Mark all pockets, incomes and expenses for this month
+        S.pockets.forEach(function(p){
+          if(p.monthly>0){
+            var key=y+'-'+m+'-pocket-'+p.id;
+            if(!S.status[key])S.status[key]=true;
+          }
+        });
+        S.incomes.filter(function(i){return i.amount>0;}).forEach(function(inc){
+          var key=y+'-'+m+'-income-'+inc.id;
+          if(!S.status[key])S.status[key]=true;
+        });
+        S.expenses.forEach(function(exp){
+          var key=y+'-'+m+'-expense-'+exp.id;
+          if(!S.status[key])S.status[key]=true;
+        });
       }
     }
   }
-  save();renderMensual();renderGestion();renderDashboard();
+  save();
+  renderMensual();
+  renderGestion();
+  renderDashboard();
 }
 
 function isBeforeStart(y,m){
   if(!S.startDate)return false;
   const start=new Date(S.startDate);
-  return y<start.getFullYear()||(y===start.getFullYear()&&m<start.getMonth());
+  const startY=start.getFullYear();
+  const startM=start.getMonth();
+  return y<startY||(y===startY&&m<startM);
 }
 
-// ─── GESTIONAR EDIT ──────────────────────────────────────────────────────────
+function isSamePeriod(y,m){
+  // Returns true if the month/year is on or after startDate
+  if(!S.startDate)return true;
+  return !isBeforeStart(y,m);
+}
+
+// ─── GESTIONAR EDIT ───────────────────────────────────────────────────────────
 function _ga_call(i){if(window._gActions&&window._gActions[i]){var a=window._gActions[i];openAmtModal(a.type,a.id,a.month,a.amt);}}
 function openAmtModal(type,id,month,currentAmt){
   window._gEdit={type:type,id:id,month:month};
+  // Calculate default
   var def=0;
   if(type==='pocket'){var p=S.pockets.find(function(x){return x.id===id;});def=(p?p.monthly||0:0)*pocketMultForMonth(month);}
   else if(type==='income'){var inc=S.incomes.find(function(x){return x.id===id;});if(inc)def=(inc.isSalary&&inc.hasDouble&&inc.doubleMonths&&inc.doubleMonths.includes(month))?inc.amount*2:inc.amount;}
@@ -1657,9 +1671,128 @@ function saveGEdit(){
   }
   window._gEdit=null;
   closeModal('mEditAmt');
-  renderGestion();renderMensual();renderDashboard();
+  renderGestion();
+  renderMensual();
+  renderDashboard();
 }
 function cancelGEdit(){window._gEdit=null;closeModal('mEditAmt');}
+
+// ─── NOTAS ───────────────────────────────────────────────────────────────────
+let editingNotaId=null;
+
+function initNotas(){
+  if(!S.notas)S.notas={lista:[]};
+  if(!S.notas.lista)S.notas.lista=[];
+  renderNotasList();
+  // Attach button listeners
+  var backBtn=document.getElementById('notasBackBtn');
+  var newBtn=document.getElementById('notasNewBtn');
+  if(backBtn)backBtn.addEventListener('click',function(){goBack();});
+  if(newBtn)newBtn.addEventListener('click',function(){openNotaEditor(null);});
+}
+
+function renderNotasList(){
+  var el=document.getElementById('notasContent');
+  var lista=S.notas.lista||[];
+  if(!lista.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Sin notas. Pulsa + Nueva para crear una.</div></div>';
+    return;
+  }
+  el.innerHTML=lista.map(function(n,i){
+    var pocketPills=(n.pockets||[]).map(function(pp){
+      var p=S.pockets.find(function(x){return x.id===pp.id;});
+      if(!p)return '';
+      return '<span class="nota-pocket-pill">'+p.emoji+' '+p.name+': '+fmt(pp.amount)+'</span>';
+    }).join('');
+    return '<div class="nota-card">'
+      +'<div class="nota-card-title">'+(n.titulo||'Sin título')+'</div>'
+      +(n.capital?'<div class="nota-card-capital">Capital esperado: '+fmt(n.capital)+'</div>':'')
+      +(pocketPills?'<div class="nota-card-pockets">'+pocketPills+'</div>':'')
+      +(n.capital?(function(){var totalPockets=(n.pockets||[]).reduce(function(s,pp){return s+pp.amount;},0);var disp=n.capital-totalPockets;return '<div style="font-size:13px;font-weight:700;color:'+(disp>=0?'var(--green)':'var(--red)')+';">Capital disponible: '+fmt(disp)+'</div>';}()):'')
+      +(n.texto?'<div class="nota-card-text">'+n.texto+'</div>':'')
+      +'<div class="nota-card-date">'+(n.date||'')+'</div>'
+      +'<div class="nota-card-actions">'
+      +'<button class="nota-del-btn" data-idx="'+i+'">Eliminar</button>'
+      +'<button class="g-edit-btn" data-idx="'+i+'" style="margin-left:0;">✏️ Editar</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  // Attach delete and edit listeners
+  el.querySelectorAll('.nota-del-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var idx=parseInt(btn.getAttribute('data-idx'));
+      if(!confirm('¿Eliminar esta nota?'))return;
+      S.notas.lista.splice(idx,1);
+      save();renderNotasList();
+    });
+  });
+  el.querySelectorAll('.g-edit-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var idx=parseInt(btn.getAttribute('data-idx'));
+      openNotaEditor(idx);
+    });
+  });
+}
+
+function openNotaEditor(idx){
+  editingNotaId=idx;
+  var n=idx!==null?S.notas.lista[idx]:null;
+  pageStack.push(curPage);
+  showPage('NotaEditor');
+  document.getElementById('notaEditorTitle').textContent=n?'Editar Nota':'Nueva Nota';
+  document.getElementById('notaTitulo').value=n?n.titulo||'':'';
+  document.getElementById('notaCapital').value=n?n.capital||'':'';
+  document.getElementById('notaTexto').value=n?n.texto||'':'';
+  // Render pocket inputs with checkbox to select which to include
+  var pocketAmounts={};
+  var selectedPockets=new Set();
+  if(n&&n.pockets)n.pockets.forEach(function(pp){pocketAmounts[pp.id]=pp.amount;selectedPockets.add(pp.id);});
+  var pContainer=document.getElementById('notaEditorPockets');
+  pContainer.innerHTML=S.pockets.map(function(p){
+    var isSel=selectedPockets.has(p.id);
+    var val=pocketAmounts[p.id]||'';
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;" id="np-row-'+p.id+'">'
+      +'<input type="checkbox" id="np-chk-'+p.id+'" '+(isSel?'checked':'')+' style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;">'
+      +'<span style="font-size:18px;">'+p.emoji+'</span>'
+      +'<span style="flex:1;font-size:14px;font-weight:600;">'+p.name+'</span>'
+      +'<input class="fi" type="number" id="np-'+p.id+'" value="'+val+'" placeholder="0.00" inputmode="decimal" step="0.01" style="width:110px;text-align:right;display:'+(isSel?'block':'none')+'">'
+      +'</div>';
+  }).join('');
+  // Show/hide amount input based on checkbox
+  S.pockets.forEach(function(p){
+    var chk=document.getElementById('np-chk-'+p.id);
+    var inp=document.getElementById('np-'+p.id);
+    if(chk&&inp){
+      chk.addEventListener('change',function(){
+        inp.style.display=chk.checked?'block':'none';
+        if(!chk.checked)inp.value='';
+      });
+    }
+  });
+  // Attach save and back listeners
+  var saveBtn=document.getElementById('notaEditorSaveBtn');
+  var backBtn=document.getElementById('notaEditorBackBtn');
+  if(saveBtn){saveBtn.replaceWith(saveBtn.cloneNode(true));document.getElementById('notaEditorSaveBtn').addEventListener('click',saveNota);}
+  if(backBtn){backBtn.replaceWith(backBtn.cloneNode(true));document.getElementById('notaEditorBackBtn').addEventListener('click',function(){goBack();initNotas();});}
+}
+
+function saveNota(){
+  var titulo=document.getElementById('notaTitulo').value.trim();
+  var capital=parseFloat(document.getElementById('notaCapital').value)||0;
+  var texto=document.getElementById('notaTexto').value.trim();
+  var pockets=[];
+  S.pockets.forEach(function(p){
+    var inp=document.getElementById('np-'+p.id);
+    if(inp){var v=parseFloat(inp.value);if(!isNaN(v)&&v>0)pockets.push({id:p.id,amount:v});}
+  });
+  var nota={titulo:titulo||'Sin título',capital:capital,texto:texto,pockets:pockets,date:new Date().toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})};
+  if(!S.notas.lista)S.notas.lista=[];
+  if(editingNotaId!==null)S.notas.lista[editingNotaId]=nota;
+  else S.notas.lista.push(nota);
+  save();
+  goBack();
+  initNotas();
+}
 
 // ─── AJUSTES ─────────────────────────────────────────────────────────────────
 function renderAjustes(){
@@ -1749,17 +1882,16 @@ function importCSV(e){
   r.onload=function(ev){
     try{
       const data=JSON.parse(ev.target.result);
-      // Accept any JSON backup regardless of version field
-      if(data.pockets||data.incomes||data.transactions){
+      if(data.version===2){
+        // Full JSON backup restore
         if(!confirm('Esto reemplazará TODOS tus datos actuales con la copia de seguridad. ¿Continuar?'))return;
-        S.pockets=data.pockets||S.pockets||[];
-        S.incomes=data.incomes||S.incomes||[];
-        S.expenses=data.expenses||S.expenses||[];
-        S.transactions=data.transactions||S.transactions||[];
-        S.status=data.status||S.status||{};
-        S.overrides=data.overrides||S.overrides||{};
-        S.notas=data.notas||S.notas||{};
-        S.startDate=data.startDate||S.startDate||null;
+        S.pockets=data.pockets||[];
+        S.incomes=data.incomes||[];
+        S.expenses=data.expenses||[];
+        S.transactions=data.transactions||[];
+        S.status=data.status||{};
+        S.overrides=data.overrides||{};
+        S.notas=data.notas||{};
         if(data.theme)S.theme=data.theme;
         S.lastImport=new Date().toISOString();
         save();
@@ -1825,7 +1957,6 @@ renderDashboard();
 if(Notification&&Notification.permission==='granted'&&(S.notifDay||S.notifTime))scheduleNotif();
 
 initDelegation();
-document.getElementById('prevSelect').addEventListener('change',renderPrevision);
 document.getElementById('mEditAmtSave').addEventListener('click',saveGEdit);
 document.getElementById('mEditAmtCancel').addEventListener('click',cancelGEdit);
 // FAB buttons - use addEventListener to work in Safari mobile
