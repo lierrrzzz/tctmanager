@@ -19150,6 +19150,7 @@ ${c}`
         entries: t,
         accountCosts: a
     }) {
+        let [hov, setHov] = (0, o.useState)(null);
         let r = new Date,
             s = [];
         for (let b = 5; b >= 0; b--) {
@@ -19184,7 +19185,8 @@ ${c}`
             c = (p - m - y) / (s.length - 1 || 1),
             h = b => g + (x - g - w) * (1 - b / f),
             v = b => b.map((A, S) => `${m+S*c},${h(A)}`).join(" "),
-            gv = [0, f / 2, f];
+            gv = [0, f / 2, f],
+            tipX = hov === null ? 0 : Math.min(Math.max(m + hov * c, m + 55), p - y - 55);
         return o.default.createElement("div", {
             className: "rounded-2xl border border-slate-200 bg-white p-5 mb-4"
         }, o.default.createElement("style", null, "@keyframes bkdraw{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}"), o.default.createElement("div", {
@@ -19203,7 +19205,8 @@ ${c}`
             className: "w-2 h-2 rounded-full bg-rose-500 inline-block"
         }), " Gastos"))), o.default.createElement("svg", {
             viewBox: `0 0 ${p} ${x}`,
-            className: "w-full h-56"
+            className: "w-full h-56",
+            onMouseLeave: () => setHov(null)
         }, gv.map((G, Gi) => o.default.createElement("g", {
             key: Gi
         }, o.default.createElement("line", {
@@ -19243,13 +19246,70 @@ ${c}`
                 strokeDashoffset: 2000,
                 animation: "bkdraw 1.6s ease-out 0.15s forwards"
             }
-        }), s.map((b, A) => o.default.createElement("text", {
+        }), hov !== null && o.default.createElement("line", {
+            x1: m + hov * c,
+            x2: m + hov * c,
+            y1: g,
+            y2: x - w,
+            stroke: "#cbd5e1",
+            strokeWidth: "1",
+            strokeDasharray: "3,3"
+        }), s.map((b, A) => o.default.createElement("rect", {
+            key: "hit-" + b.key,
+            x: m + A * c - c / 2,
+            y: 0,
+            width: c,
+            height: x - w,
+            fill: "transparent",
+            onMouseEnter: () => setHov(A),
+            style: {
+                cursor: "pointer"
+            }
+        })), hov !== null && o.default.createElement("circle", {
+            cx: m + hov * c,
+            cy: h(u[hov]),
+            r: 3.5,
+            fill: "#059669"
+        }), hov !== null && o.default.createElement("circle", {
+            cx: m + hov * c,
+            cy: h(d[hov]),
+            r: 3.5,
+            fill: "#e11d48"
+        }), hov !== null && o.default.createElement("g", null, o.default.createElement("rect", {
+            x: tipX - 55,
+            y: 4,
+            width: 110,
+            height: 44,
+            rx: 6,
+            fill: "#0f172a",
+            opacity: 0.92
+        }), o.default.createElement("text", {
+            x: tipX,
+            y: 18,
+            fontSize: "9",
+            fontWeight: "600",
+            textAnchor: "middle",
+            fill: "#fff"
+        }, s[hov].label), o.default.createElement("text", {
+            x: tipX,
+            y: 31,
+            fontSize: "8.5",
+            textAnchor: "middle",
+            fill: "#6ee7b7"
+        }, "Ingresos: ", J(u[hov], "USD")), o.default.createElement("text", {
+            x: tipX,
+            y: 43,
+            fontSize: "8.5",
+            textAnchor: "middle",
+            fill: "#fda4af"
+        }, "Gastos: ", J(d[hov], "USD"))), s.map((b, A) => o.default.createElement("text", {
             key: b.key,
             x: m + A * c,
             y: x - 6,
             fontSize: "9",
             textAnchor: "middle",
-            fill: "#64748b"
+            fill: hov === A ? "#0f172a" : "#64748b",
+            fontWeight: hov === A ? "700" : "400"
         }, b.label))))
     }
 
@@ -19279,7 +19339,7 @@ ${c}`
             ...I,
             isPayout: !1
         }))];
-        N && ($ = $.filter(I => I.label === N)), D && ($ = $.filter(I => I.date >= D)), K && ($ = $.filter(I => I.date <= K)), $ = $.sort((I, W) => I.date < W.date ? 1 : -1); const PGSZ = 21, totalPg = Math.max(1, Math.ceil($.length / PGSZ)), pagedMov = $.slice(pg * PGSZ, pg * PGSZ + PGSZ);
+        N && ($ = $.filter(I => I.label === N)), D && ($ = $.filter(I => I.date >= D)), K && ($ = $.filter(I => I.date <= K)), $ = $.sort((I, W) => I.date < W.date ? 1 : -1); const PGSZ = 20, totalPg = Math.max(1, Math.ceil($.length / PGSZ)), pagedMov = $.slice(pg * PGSZ, pg * PGSZ + PGSZ);
         let ke = () => {
                 i(!0), p("ingreso"), m(""), g(""), c(""), v(new Date().toISOString().slice(0, 10))
             },
