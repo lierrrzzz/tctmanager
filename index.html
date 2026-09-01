@@ -17112,8 +17112,20 @@ ${c}`
     }
 
     function u0(e, t, a) {
-        let r = (t || {})[e.tagId];
-        return (Array.isArray(r) ? r : r ? [r] : []).map(n => (a || []).find(l => l.id === n)).filter(Boolean)
+        let r = (t || {})[e.tagId], n;
+        if (Array.isArray(r)) n = r;
+        else if (r && typeof r === "object") {
+            if (r.mode && r.mode !== "objetivo") return [];
+            n = r.targets || []
+        } else n = r ? [r] : [];
+        return n.map(l => (a || []).find(i => i.id === l)).filter(Boolean)
+    }
+
+    function getResultTagTarget(e, t, a, r) {
+        let s = (t || {})[e];
+        if (!s || Array.isArray(s) || s.mode !== "resultado") return null;
+        let n = a === "TP" ? s.tp : a === "SL" ? s.sl : null;
+        return n ? (r || []).find(l => l.id === n) || null : null
     }
 
     function tw(e, t, a) {
@@ -18652,7 +18664,9 @@ ${c}`
                         accountId: U.id
                     }],
                     payouts: []
-                })
+                });
+                let RT = getResultTagTarget(U.tagId, y, X, m);
+                RT && window.confirm(`Acabas de tener ${X} en ${U.name}. \xBFCambiar la etiqueta a ${RT.label}?`) && g(U.id, RT.id)
             }
         }), se && o.default.createElement(uw, {
             account: se,
@@ -21827,32 +21841,83 @@ ${c}`
         }, "Crea alguna etiqueta primero para poder configurar esto.") : o.default.createElement("div", {
             className: "space-y-2"
         }, e.tags.map(g => {
-            let w = (() => {
-                    let b = (e.tagEvolution || {})[g.id];
-                    return Array.isArray(b) ? b : b ? [b] : []
-                })(),
-                c = w.length > 0 ? w.length : 0,
-                h = b => t(A => {
+            let cfgRaw = (e.tagEvolution || {})[g.id],
+                cfg = cfgRaw && !Array.isArray(cfgRaw) && typeof cfgRaw === "object" ? cfgRaw : {
+                    mode: "objetivo",
+                    targets: Array.isArray(cfgRaw) ? cfgRaw : cfgRaw ? [cfgRaw] : []
+                },
+                mode = cfg.mode || "objetivo",
+                targets = cfg.targets || [],
+                cnt = targets.length > 0 ? targets.length : 0,
+                setMode = b => t(A => {
                     let S = (A.tagEvolution || {})[g.id],
-                        N = (Array.isArray(S) ? [...S] : S ? [S] : []).slice(0, b);
+                        K = S && !Array.isArray(S) && typeof S === "object" ? S : {
+                            targets: Array.isArray(S) ? S : S ? [S] : []
+                        };
+                    return {
+                        ...A,
+                        tagEvolution: {
+                            ...A.tagEvolution || {},
+                            [g.id]: {
+                                ...K,
+                                mode: b
+                            }
+                        }
+                    }
+                }),
+                setCnt = b => t(A => {
+                    let S = (A.tagEvolution || {})[g.id],
+                        K = S && !Array.isArray(S) && typeof S === "object" ? S : {
+                            mode: "objetivo",
+                            targets: Array.isArray(S) ? S : S ? [S] : []
+                        },
+                        N = (K.targets || []).slice(0, b);
                     for (; N.length < b;) N.push(null);
                     return {
                         ...A,
                         tagEvolution: {
                             ...A.tagEvolution || {},
-                            [g.id]: N
+                            [g.id]: {
+                                ...K,
+                                mode: "objetivo",
+                                targets: N
+                            }
                         }
                     }
                 }),
-                v = (b, A) => t(S => {
-                    let k = (S.tagEvolution || {})[g.id],
-                        N = Array.isArray(k) ? [...k] : k ? [k] : [];
+                setSlot = (b, A) => t(S => {
+                    let K = (S.tagEvolution || {})[g.id],
+                        Z = K && !Array.isArray(K) && typeof K === "object" ? K : {
+                            mode: "objetivo",
+                            targets: Array.isArray(K) ? K : K ? [K] : []
+                        },
+                        N = [...(Z.targets || [])];
                     for (; N.length <= b;) N.push(null);
                     return N[b] = A, {
                         ...S,
                         tagEvolution: {
                             ...S.tagEvolution || {},
-                            [g.id]: N
+                            [g.id]: {
+                                ...Z,
+                                targets: N
+                            }
+                        }
+                    }
+                }),
+                setRes = (b, A) => t(S => {
+                    let K = (S.tagEvolution || {})[g.id],
+                        Z = K && !Array.isArray(K) && typeof K === "object" ? K : {
+                            targets: []
+                        };
+                    return {
+                        ...S,
+                        tagEvolution: {
+                            ...S.tagEvolution || {},
+                            [g.id]: {
+                                ...Z,
+                                mode: "resultado",
+                                [b]: A
+                            }
                         }
                     }
                 });
@@ -21867,21 +21932,55 @@ ${c}`
                 className: "text-slate-300 shrink-0"
             }, "\u2192"), o.default.createElement("div", {
                 className: "flex items-center rounded-md border border-slate-200 overflow-hidden shrink-0"
+            }, o.default.createElement("button", {
+                type: "button",
+                onClick: () => setMode("objetivo"),
+                className: `px-2 h-6 flex items-center text-[10.5px] font-semibold transition-colors ${mode==="objetivo"?"bg-slate-800 text-white":"bg-white text-slate-400 hover:bg-slate-50"}`
+            }, "1 Objetivo"), o.default.createElement("button", {
+                type: "button",
+                onClick: () => setMode("resultado"),
+                className: `px-2 h-6 flex items-center text-[10.5px] font-semibold transition-colors ${mode==="resultado"?"bg-slate-800 text-white":"bg-white text-slate-400 hover:bg-slate-50"}`
+            }, "2 Resultado")), mode === "objetivo" && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
+                className: "flex items-center rounded-md border border-slate-200 overflow-hidden shrink-0"
             }, [1, 2].map(b => o.default.createElement("button", {
                 key: b,
                 type: "button",
-                onClick: () => h(c === b ? 0 : b),
-                className: `w-6 h-6 flex items-center justify-center text-[11px] font-semibold transition-colors ${c===b?"bg-slate-800 text-white":"bg-white text-slate-400 hover:bg-slate-50"}`
-            }, b))), c > 0 && o.default.createElement("div", {
+                onClick: () => setCnt(cnt === b ? 0 : b),
+                className: `w-6 h-6 flex items-center justify-center text-[11px] font-semibold transition-colors ${cnt===b?"bg-slate-800 text-white":"bg-white text-slate-400 hover:bg-slate-50"}`
+            }, b))), cnt > 0 && o.default.createElement("div", {
                 className: "flex items-center flex-wrap gap-1.5 min-w-0"
             }, Array.from({
-                length: c
+                length: cnt
             }).map((b, A) => o.default.createElement(iw, {
                 key: A,
                 slotLabel: String(A + 1),
                 tags: e.tags.filter(S => S.id !== g.id),
-                value: w[A] || null,
-                onChange: S => v(A, S)
+                value: targets[A] || null,
+                onChange: S => setSlot(A, S)
+            })))), mode === "resultado" && o.default.createElement("div", {
+                className: "flex items-center flex-wrap gap-3"
+            }, o.default.createElement("div", {
+                className: "flex items-center gap-1.5"
+            }, o.default.createElement("span", {
+                className: "text-[10.5px] font-semibold text-emerald-600"
+            }, "TP"), o.default.createElement("span", {
+                className: "text-slate-300"
+            }, "\u2192"), o.default.createElement(iw, {
+                slotLabel: "TP",
+                tags: e.tags.filter(S => S.id !== g.id),
+                value: cfg.tp || null,
+                onChange: S => setRes("tp", S)
+            })), o.default.createElement("div", {
+                className: "flex items-center gap-1.5"
+            }, o.default.createElement("span", {
+                className: "text-[10.5px] font-semibold text-rose-600"
+            }, "SL"), o.default.createElement("span", {
+                className: "text-slate-300"
+            }, "\u2192"), o.default.createElement(iw, {
+                slotLabel: "SL",
+                tags: e.tags.filter(S => S.id !== g.id),
+                value: cfg.sl || null,
+                onChange: S => setRes("sl", S)
             }))))
         }))), o.default.createElement("div", {
             className: "rounded-2xl border border-slate-200 bg-white p-5"
