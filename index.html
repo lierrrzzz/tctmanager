@@ -19148,8 +19148,11 @@ ${c}`
     function bw({
         payouts: e,
         entries: t,
-        accountCosts: a
+        accountCosts: a,
+        rate: bkRate,
+        currency: bkCur
     }) {
+        let convC = NC => bkRate ? NC * bkRate : NC, curLbl = bkCur || "USD";
         let [hov, setHov] = (0, o.useState)(null);
         let r = new Date,
             s = [];
@@ -19222,7 +19225,7 @@ ${c}`
             fontSize: "9",
             textAnchor: "end",
             fill: "#94a3b8"
-        }, J(G, "USD")))), o.default.createElement("polyline", {
+        }, J(convC(G), curLbl)))), o.default.createElement("polyline", {
             points: v(u),
             fill: "none",
             stroke: "#059669",
@@ -19296,13 +19299,13 @@ ${c}`
             fontSize: "8.5",
             textAnchor: "middle",
             fill: "#6ee7b7"
-        }, "Ingresos: ", J(u[hov], "USD")), o.default.createElement("text", {
+        }, "Ingresos: ", J(convC(u[hov]), curLbl)), o.default.createElement("text", {
             x: tipX,
             y: 43,
             fontSize: "8.5",
             textAnchor: "middle",
             fill: "#fda4af"
-        }, "Gastos: ", J(d[hov], "USD"))), s.map((b, A) => o.default.createElement("text", {
+        }, "Gastos: ", J(convC(d[hov]), curLbl))), s.map((b, A) => o.default.createElement("text", {
             key: b.key,
             x: m + A * c,
             y: x - 6,
@@ -19319,9 +19322,11 @@ ${c}`
         setEntries: a,
         concepts: r,
         setConcepts: s,
-        accounts: n
+        accounts: n,
+        settings: cur,
+        setSettings: setSet
     }) {
-        let [l, i] = (0, o.useState)(!1), [u, d] = (0, o.useState)(!1), [f, p] = (0, o.useState)("ingreso"), [x, m] = (0, o.useState)(""), [y, g] = (0, o.useState)(""), [w, c] = (0, o.useState)(""), [h, v] = (0, o.useState)(new Date().toISOString().slice(0, 10)), [b, A] = (0, o.useState)(""), [S, k] = (0, o.useState)("ingreso"), [N, H] = (0, o.useState)(""), [D, T] = (0, o.useState)(""), [K, E] = (0, o.useState)(""), [pg, setPg] = (0, o.useState)(0), L = (e || []).filter(I => I.status === "confirmado").reduce((I, W) => I + W.amount, 0), O = (n || []).filter(I => I.cost > 0), U = O.reduce((I, W) => I + W.cost, 0), Q = (t || []).filter(I => I.type === "ingreso").reduce((I, W) => I + W.amount, 0), se = (t || []).filter(I => I.type === "gasto").reduce((I, W) => I + W.amount, 0), B = L + Q, ae = se + U, ue = B - ae, $ = [...(e || []).filter(I => I.status === "confirmado").map(I => ({
+        let [l, i] = (0, o.useState)(!1), [u, d] = (0, o.useState)(!1), [f, p] = (0, o.useState)("ingreso"), [x, m] = (0, o.useState)(""), [y, g] = (0, o.useState)(""), [w, c] = (0, o.useState)(""), [h, v] = (0, o.useState)(new Date().toISOString().slice(0, 10)), [b, A] = (0, o.useState)(""), [S, k] = (0, o.useState)("ingreso"), [N, H] = (0, o.useState)(""), [D, T] = (0, o.useState)(""), [K, E] = (0, o.useState)(""), [pg, setPg] = (0, o.useState)(0), [dispCur, setDispCur] = (0, o.useState)((cur && cur.preferredDisplayCurrency) || (cur && cur.currency) || "USD"), curLocked = cur && cur.preferredDisplayCurrency === dispCur, toggleCurLock = () => setSet(SS => ({...SS, preferredDisplayCurrency: SS.preferredDisplayCurrency === dispCur ? null : dispCur})), curRate = dispCur === (cur && cur.currency) ? 1 : ((cur && cur.exchangeRates) || {})[dispCur] || null, convBk = NB => curRate ? NB * curRate : NB, L = (e || []).filter(I => I.status === "confirmado").reduce((I, W) => I + W.amount, 0), O = (n || []).filter(I => I.cost > 0), U = O.reduce((I, W) => I + W.cost, 0), Q = (t || []).filter(I => I.type === "ingreso").reduce((I, W) => I + W.amount, 0), se = (t || []).filter(I => I.type === "gasto").reduce((I, W) => I + W.amount, 0), B = L + Q, ae = se + U, ue = B - ae, $ = [...(e || []).filter(I => I.status === "confirmado").map(I => ({
             id: "payout-" + I.id,
             date: I.date,
             type: "ingreso",
@@ -19369,14 +19374,30 @@ ${c}`
             },
             le = Array.from(new Set(($.length ? [...(e || []).map(() => "Payout"), ...(t || []).map(I => I.label)] : []).filter(Boolean)));
         return o.default.createElement("div", null, o.default.createElement("div", {
-            className: "mb-6"
-        }, o.default.createElement("p", {
+            className: "mb-6 flex items-start justify-between gap-3 flex-wrap"
+        }, o.default.createElement("div", null, o.default.createElement("p", {
             className: "text-[11px] font-semibold tracking-wide text-slate-400 uppercase"
         }, "Vista global"), o.default.createElement("h2", {
             className: "text-2xl font-semibold text-slate-900 mt-1"
         }, "Bankroll"), o.default.createElement("p", {
             className: "text-sm text-slate-500 mt-1"
         }, "Tu control de ingresos y gastos personales, aparte de la operativa de fondeo.")), o.default.createElement("div", {
+            className: "flex items-center gap-2 shrink-0"
+        }, o.default.createElement("div", {
+            className: "flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden"
+        }, ["USD", "EUR", "GBP"].map(BC => o.default.createElement("button", {
+            key: BC,
+            onClick: () => setDispCur(BC),
+            className: `px-2.5 py-2 text-[12px] font-medium transition-colors ${dispCur===BC?"bg-slate-900 text-white":"text-slate-500 hover:bg-slate-50"}`
+        }, BC))), o.default.createElement("button", {
+            onClick: toggleCurLock,
+            className: `w-9 h-9 flex items-center justify-center rounded-xl border transition-colors ${curLocked?"border-blue-200 bg-blue-50 text-blue-600":"border-slate-200 bg-white text-slate-400 hover:bg-slate-50"}`,
+            title: curLocked ? "Moneda fijada \u2014 clic para desbloquear" : "Clic para fijar esta moneda la pr\xF3xima vez"
+        }, curLocked ? o.default.createElement(va, {
+            size: 14
+        }) : o.default.createElement(Mt, {
+            size: 14
+        })))), o.default.createElement("div", {
             className: "grid grid-cols-1 lg:grid-cols-2 gap-5"
         }, o.default.createElement("div", null, o.default.createElement("button", {
             onClick: ke,
@@ -19411,7 +19432,7 @@ ${c}`
             className: "flex items-center gap-2 shrink-0"
         }, o.default.createElement("span", {
             className: `text-[13px] font-medium ${I.type==="ingreso"?"text-emerald-600":"text-rose-600"}`
-        }, I.type === "ingreso" ? "+" : "-", J(I.amount, "USD")), !I.isPayout && o.default.createElement("button", {
+        }, I.type === "ingreso" ? "+" : "-", J(convBk(I.amount), dispCur)), !I.isPayout && o.default.createElement("button", {
             onClick: () => Te(I.id),
             className: "w-5 h-5 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50",
             "aria-label": "Eliminar movimiento"
@@ -19425,45 +19446,28 @@ ${c}`
             className: "text-[11px] text-slate-400 mb-1"
         }, "Ingresos totales"), o.default.createElement("p", {
             className: "text-[16px] font-semibold text-emerald-600"
-        }, J(B, "USD")), o.default.createElement("p", {
+        }, J(convBk(B), dispCur)), o.default.createElement("p", {
             className: "text-[10px] text-slate-300 mt-0.5"
-        }, "Incl. ", J(L, "USD"), " payouts")), o.default.createElement("div", {
+        }, "Incl. ", J(convBk(L), dispCur), " payouts")), o.default.createElement("div", {
             className: "rounded-2xl border border-slate-200 bg-white p-4"
         }, o.default.createElement("p", {
             className: "text-[11px] text-slate-400 mb-1"
         }, "Gastos totales"), o.default.createElement("p", {
             className: "text-[16px] font-semibold text-rose-600"
-        }, J(ae, "USD")), o.default.createElement("p", {
+        }, J(convBk(ae), dispCur)), o.default.createElement("p", {
             className: "text-[10px] text-slate-300 mt-0.5"
-        }, "Incl. ", J(U, "USD"), " cuentas fondeo")), o.default.createElement("div", {
+        }, "Incl. ", J(convBk(U), dispCur), " cuentas fondeo")), o.default.createElement("div", {
             className: "rounded-2xl border border-slate-200 bg-white p-4"
         }, o.default.createElement("p", {
             className: "text-[11px] text-slate-400 mb-1"
         }, "Balance"), o.default.createElement("p", {
             className: `text-[16px] font-semibold ${ue>=0?"text-slate-800":"text-rose-600"}`
-        }, J(ue, "USD")))), o.default.createElement("button", {
-            onClick: () => d(!0),
-            className: "w-full flex items-center justify-center gap-1.5 text-[13px] font-medium border border-slate-200 text-slate-600 rounded-xl px-3.5 py-2 hover:bg-slate-50 transition-colors mb-4"
-        }, o.default.createElement(Be, {
-            size: 14
-        }), " A\xF1adir concepto"), (r || []).length > 0 && o.default.createElement("div", {
-            className: "rounded-2xl border border-slate-200 bg-white p-4 mb-4"
-        }, o.default.createElement("p", {
-            className: "text-[11px] font-semibold tracking-wide text-slate-400 uppercase mb-2"
-        }, "Conceptos predeterminados"), o.default.createElement("div", {
-            className: "flex flex-wrap gap-1.5"
-        }, r.map(I => o.default.createElement("span", {
-            key: I.id,
-            className: `flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-1 rounded-md ${I.type==="ingreso"?"bg-emerald-50 text-emerald-700":"bg-rose-50 text-rose-700"}`
-        }, I.label, o.default.createElement("button", {
-            onClick: () => he(I.id),
-            className: "hover:text-rose-500"
-        }, o.default.createElement(Le, {
-            size: 10
-        })))))), o.default.createElement(bw, {
+        }, J(convBk(ue), dispCur)))), o.default.createElement(bw, {
             payouts: e,
             entries: t,
-            accountCosts: O
+            accountCosts: O,
+            rate: curRate,
+            currency: dispCur
         }), o.default.createElement("div", {
             className: "rounded-2xl border border-slate-200 bg-white p-4"
         }, o.default.createElement("p", {
@@ -19485,7 +19489,26 @@ ${c}`
             onChange: (I, W) => {
                 T(I), E(W)
             }
-        })))), l && o.default.createElement(Ke, {
+        })), o.default.createElement("button", {
+            onClick: () => d(!0),
+            className: "w-full flex items-center justify-center gap-1.5 text-[13px] font-medium border border-slate-200 text-slate-600 rounded-xl px-3.5 py-2 hover:bg-slate-50 transition-colors mb-4"
+        }, o.default.createElement(Be, {
+            size: 14
+        }), " A\xF1adir concepto"), (r || []).length > 0 && o.default.createElement("div", {
+            className: "rounded-2xl border border-slate-200 bg-white p-4 mb-4"
+        }, o.default.createElement("p", {
+            className: "text-[11px] font-semibold tracking-wide text-slate-400 uppercase mb-2"
+        }, "Conceptos predeterminados"), o.default.createElement("div", {
+            className: "flex flex-wrap gap-1.5"
+        }, r.map(I => o.default.createElement("span", {
+            key: I.id,
+            className: `flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-1 rounded-md ${I.type==="ingreso"?"bg-emerald-50 text-emerald-700":"bg-rose-50 text-rose-700"}`
+        }, I.label, o.default.createElement("button", {
+            onClick: () => he(I.id),
+            className: "hover:text-rose-500"
+        }, o.default.createElement(Le, {
+            size: 10
+        })))))))), l && o.default.createElement(Ke, {
             title: "Registrar movimiento",
             onClose: () => i(!1)
         }, o.default.createElement(Y, {
@@ -23069,7 +23092,9 @@ ${c}`
                 ...R,
                 bankrollConcepts: typeof C == "function" ? C(R.bankrollConcepts || []) : C
             })),
-            accounts: x
+            accounts: x,
+            settings: M,
+            setSettings: de
         }), u === "etiquetas" && o.default.createElement(Fw, {
             settings: M,
             setSettings: de,
