@@ -18489,16 +18489,116 @@ ${c}`
                     }), X
                 }), ya("groups", I)
             },
-            le = v.filter(I => !s[I.id]);
+            le = v.filter(I => !s[I.id]),
+            [showActions, setShowActions] = (0, o.useState)(!1),
+            [showDispo, setShowDispo] = (0, o.useState)(!1);
         return o.default.createElement("div", null, o.default.createElement("div", {
-            className: "mb-6"
-        }, o.default.createElement("p", {
+            className: "mb-6 flex items-start justify-between gap-3 flex-wrap"
+        }, o.default.createElement("div", null, o.default.createElement("p", {
             className: "text-[11px] font-semibold tracking-wide text-slate-400 uppercase"
         }, "Organizaci\xF3n de cuentas"), o.default.createElement("h2", {
             className: "text-2xl font-semibold text-slate-900 mt-1"
         }, "Grupo de cuentas"), o.default.createElement("p", {
             className: "text-sm text-slate-500 mt-1"
-        }, "Crea grupos, as\xEDgnales d\xEDas y arrastra tus cuentas dentro.")), o.default.createElement("div", {
+        }, "Crea grupos, as\xEDgnales d\xEDas y arrastra tus cuentas dentro.")), o.default.createElement("button", {
+            onClick: () => setShowDispo(b => !b),
+            className: "relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-[16px] hover:bg-slate-50 transition-colors",
+            "aria-label": "Cuentas sin grupo"
+        }, "\uD83D\uDCE5", le.length > 0 && o.default.createElement("span", {
+            className: "absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-semibold flex items-center justify-center"
+        }, le.length), showDispo && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
+            className: "fixed inset-0 z-10",
+            onClick: I => {
+                I.stopPropagation(), setShowDispo(!1)
+            }
+        }), o.default.createElement("div", {
+            onClick: I => I.stopPropagation(),
+            className: "absolute right-0 top-12 z-20 w-80 rounded-2xl border border-slate-200 bg-white shadow-lg p-4"
+        }, o.default.createElement("div", {
+            className: "flex items-center justify-between mb-3"
+        }, o.default.createElement("h3", {
+            className: "text-sm font-semibold text-slate-800"
+        }, "Cuentas disponibles"), o.default.createElement("div", {
+            className: "flex items-center gap-1"
+        }, o.default.createElement("button", {
+            onClick: () => ue(!0),
+            className: "w-6 h-6 rounded-lg border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-50",
+            "aria-label": "A\xF1adir varias cuentas",
+            title: "A\xF1adir varias cuentas"
+        }, o.default.createElement(Ds, {
+            size: 12
+        })), o.default.createElement("button", {
+            onClick: l,
+            className: "w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800",
+            "aria-label": "A\xF1adir cuenta",
+            title: "A\xF1adir una cuenta"
+        }, o.default.createElement(Be, {
+            size: 14
+        })))), o.default.createElement("div", {
+            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1"
+        }, le.length === 0 && o.default.createElement("p", {
+            className: "text-[12px] text-slate-300 text-center py-6"
+        }, "Todas las cuentas est\xE1n asignadas"), le.map(I => o.default.createElement(_g, {
+            key: I.id,
+            account: I,
+            phases: t,
+            tags: m,
+            tagEvolution: y,
+            trades: c,
+            onDragStart: Te,
+            onView: u,
+            onEdit: d,
+            onQuickTrade: Q,
+            onEvolve: B
+        })))))), o.default.createElement("div", {
+            className: "relative"
+        }, o.default.createElement("button", {
+            onClick: () => setShowActions(b => !b),
+            className: "w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors",
+            "aria-label": "M\xE1s acciones"
+        }, o.default.createElement(Be, {
+            size: 18
+        })), showActions && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
+            className: "fixed inset-0 z-10",
+            onClick: () => setShowActions(!1)
+        }), o.default.createElement("div", {
+            className: "absolute right-0 top-12 z-20 w-64 rounded-2xl border border-slate-200 bg-white shadow-lg p-2 flex flex-col gap-1"
+        }, o.default.createElement("button", {
+            onClick: () => {
+                T(!0), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Be, {
+            size: 15
+        }), " A\xF1adir grupo"), o.default.createElement("button", {
+            onClick: () => {
+                E(!0), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(ea, {
+            size: 13
+        }), " Editar grupos"), o.default.createElement("button", {
+            onClick: () => {
+                O(!0), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Be, {
+            size: 15
+        }), " A\xF1adir movimiento"), o.default.createElement("button", {
+            onClick: () => {
+                ke(!0), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Dr, {
+            size: 14
+        }), " Capital gestionado hoy"), o.default.createElement("button", {
+            onClick: () => {
+                de(!0), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(wo, {
+            size: 14
+        }), " Asociar objetivo"))))), o.default.createElement("div", {
             className: `flex items-center gap-2.5 mb-4 px-3.5 py-2 rounded-xl border ${S?S.sessionState==="finalizada"?"border-slate-800 bg-slate-900":"border-amber-300 bg-amber-50":"border-slate-200 bg-white"}`
         }, o.default.createElement("span", {
             className: `w-2 h-2 rounded-full shrink-0 ${S?S.sessionState==="finalizada"?"bg-white":"bg-amber-500 animate-pulse":"bg-slate-300"}`
@@ -18510,7 +18610,7 @@ ${c}`
         }, "Finalizar sesi\xF3n \u2192")), o.default.createElement("div", {
             className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-start mb-4"
         }, a.length === 0 && o.default.createElement("div", {
-            className: "sm:col-span-2 lg:col-span-3 xl:col-span-5 rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"
+            className: "sm:col-span-2 lg:col-span-3 xl:col-span-6 rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"
         }, o.default.createElement("p", {
             className: "text-[13px] text-slate-400"
         }, "Todav\xEDa no has creado ning\xFAn grupo."), o.default.createElement("button", {
@@ -18572,79 +18672,7 @@ ${c}`
                     onEvolve: B
                 }))))
             })
-        })(), o.default.createElement("div", {
-            className: "flex flex-col gap-4"
-        }, o.default.createElement("div", {
-            className: "rounded-2xl border border-slate-200 bg-white p-4 flex flex-col gap-2 justify-center"
-        }, o.default.createElement("button", {
-            onClick: () => T(!0),
-            className: "flex items-center justify-center gap-1.5 bg-slate-900 text-white text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-800"
-        }, o.default.createElement(Be, {
-            size: 15
-        }), " A\xF1adir grupo"), o.default.createElement("button", {
-            onClick: () => E(!0),
-            className: "flex items-center justify-center gap-1.5 border border-slate-200 text-slate-600 text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-50"
-        }, o.default.createElement(ea, {
-            size: 13
-        }), " Editar grupos"), o.default.createElement("button", {
-            onClick: () => O(!0),
-            className: "flex items-center justify-center gap-1.5 border border-slate-200 text-slate-600 text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-50"
-        }, o.default.createElement(Be, {
-            size: 15
-        }), " A\xF1adir movimiento"), o.default.createElement("button", {
-            onClick: () => ke(!0),
-            className: "flex items-center justify-center gap-1.5 border border-slate-200 text-slate-600 text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-50"
-        }, o.default.createElement(Dr, {
-            size: 14
-        }), " Capital gestionado hoy"), o.default.createElement("button", {
-            onClick: () => de(!0),
-            className: "flex items-center justify-center gap-1.5 border border-slate-200 text-slate-600 text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-50"
-        }, o.default.createElement(wo, {
-            size: 14
-        }), " Asociar objetivo")), o.default.createElement("div", {
-            onDragOver: I => {
-                I.preventDefault(), H("disponibles")
-            },
-            onDragLeave: () => H(I => I === "disponibles" ? null : I),
-            onDrop: I => j(I, null),
-            className: `rounded-2xl border bg-white p-4 transition-colors ${N==="disponibles"?"border-blue-400 bg-blue-50/40":"border-slate-200"}`
-        }, o.default.createElement("div", {
-            className: "flex items-center justify-between mb-3"
-        }, o.default.createElement("h3", {
-            className: "text-sm font-semibold text-slate-800"
-        }, "Cuentas disponibles"), o.default.createElement("div", {
-            className: "flex items-center gap-1"
-        }, o.default.createElement("button", {
-            onClick: () => ue(!0),
-            className: "w-6 h-6 rounded-lg border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-50",
-            "aria-label": "A\xF1adir varias cuentas",
-            title: "A\xF1adir varias cuentas"
-        }, o.default.createElement(Ds, {
-            size: 12
-        })), o.default.createElement("button", {
-            onClick: l,
-            className: "w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800",
-            "aria-label": "A\xF1adir cuenta",
-            title: "A\xF1adir una cuenta"
-        }, o.default.createElement(Be, {
-            size: 14
-        })))), o.default.createElement("div", {
-            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1"
-        }, le.length === 0 && o.default.createElement("p", {
-            className: "text-[12px] text-slate-300 text-center py-6"
-        }, "Todas las cuentas est\xE1n asignadas"), le.map(I => o.default.createElement(_g, {
-            key: I.id,
-            account: I,
-            phases: t,
-            tags: m,
-            tagEvolution: y,
-            trades: c,
-            onDragStart: Te,
-            onView: u,
-            onEdit: d,
-            onQuickTrade: Q,
-            onEvolve: B
-        })))))), D && o.default.createElement(cw, {
+        })()), D && o.default.createElement(cw, {
             onClose: () => T(!1),
             onSave: I => r(W => [...W, I])
         }), K && o.default.createElement(dw, {
@@ -19650,7 +19678,7 @@ ${c}`
         }, o.default.createElement("p", {
             className: "text-[13px] text-slate-400"
         }, "Todav\xEDa no tienes ning\xFAn grupo creado en Grupo de cuentas.")) : o.default.createElement("div", {
-            className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3"
+            className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3"
         }, t.map(d => {
             let f = u.filter(g => a[g.id] === d.id),
                 p = new Date().toISOString().slice(0, 10),
@@ -20963,6 +20991,14 @@ ${c}`
         swatch: "bg-red-700",
         badge: "bg-red-50 text-red-700"
     }, {
+        key: "rose",
+        swatch: "bg-rose-400",
+        badge: "bg-rose-50 text-rose-700"
+    }, {
+        key: "rose-dark",
+        swatch: "bg-rose-700",
+        badge: "bg-rose-100 text-rose-800"
+    }, {
         key: "naranja-pastel",
         swatch: "bg-orange-300",
         badge: "bg-orange-50 text-orange-700"
@@ -20973,6 +21009,10 @@ ${c}`
     }, {
         key: "naranja-oscuro",
         swatch: "bg-orange-700",
+        badge: "bg-orange-50 text-orange-700"
+    }, {
+        key: "orange",
+        swatch: "bg-orange-400",
         badge: "bg-orange-50 text-orange-700"
     }, {
         key: "amarillo-pastel",
@@ -20987,6 +21027,18 @@ ${c}`
         swatch: "bg-amber-700",
         badge: "bg-amber-50 text-amber-700"
     }, {
+        key: "amber",
+        swatch: "bg-amber-400",
+        badge: "bg-amber-50 text-amber-700"
+    }, {
+        key: "amber-dark",
+        swatch: "bg-amber-700",
+        badge: "bg-amber-100 text-amber-800"
+    }, {
+        key: "lime",
+        swatch: "bg-lime-400",
+        badge: "bg-lime-50 text-lime-700"
+    }, {
         key: "verde-pastel",
         swatch: "bg-emerald-300",
         badge: "bg-emerald-50 text-emerald-700"
@@ -20998,6 +21050,18 @@ ${c}`
         key: "verde-oscuro",
         swatch: "bg-emerald-700",
         badge: "bg-emerald-50 text-emerald-700"
+    }, {
+        key: "emerald",
+        swatch: "bg-emerald-400",
+        badge: "bg-emerald-50 text-emerald-700"
+    }, {
+        key: "emerald-dark",
+        swatch: "bg-emerald-700",
+        badge: "bg-emerald-100 text-emerald-800"
+    }, {
+        key: "cyan",
+        swatch: "bg-cyan-400",
+        badge: "bg-cyan-50 text-cyan-700"
     }, {
         key: "azul-pastel",
         swatch: "bg-blue-300",
@@ -21011,6 +21075,30 @@ ${c}`
         swatch: "bg-blue-700",
         badge: "bg-blue-50 text-blue-700"
     }, {
+        key: "blue",
+        swatch: "bg-blue-400",
+        badge: "bg-blue-50 text-blue-700"
+    }, {
+        key: "blue-dark",
+        swatch: "bg-blue-700",
+        badge: "bg-blue-100 text-blue-800"
+    }, {
+        key: "indigo",
+        swatch: "bg-indigo-400",
+        badge: "bg-indigo-50 text-indigo-700"
+    }, {
+        key: "purple",
+        swatch: "bg-purple-400",
+        badge: "bg-purple-50 text-purple-700"
+    }, {
+        key: "purple-dark",
+        swatch: "bg-purple-700",
+        badge: "bg-purple-100 text-purple-800"
+    }, {
+        key: "pink",
+        swatch: "bg-pink-400",
+        badge: "bg-pink-50 text-pink-700"
+    }, {
         key: "gris",
         swatch: "bg-slate-400",
         badge: "bg-slate-100 text-slate-700"
@@ -21022,66 +21110,6 @@ ${c}`
         key: "slate",
         swatch: "bg-slate-400",
         badge: "bg-slate-100 text-slate-700"
-    }, {
-        key: "blue",
-        swatch: "bg-blue-400",
-        badge: "bg-blue-50 text-blue-700"
-    }, {
-        key: "emerald",
-        swatch: "bg-emerald-400",
-        badge: "bg-emerald-50 text-emerald-700"
-    }, {
-        key: "amber",
-        swatch: "bg-amber-400",
-        badge: "bg-amber-50 text-amber-700"
-    }, {
-        key: "rose",
-        swatch: "bg-rose-400",
-        badge: "bg-rose-50 text-rose-700"
-    }, {
-        key: "purple",
-        swatch: "bg-purple-400",
-        badge: "bg-purple-50 text-purple-700"
-    }, {
-        key: "cyan",
-        swatch: "bg-cyan-400",
-        badge: "bg-cyan-50 text-cyan-700"
-    }, {
-        key: "pink",
-        swatch: "bg-pink-400",
-        badge: "bg-pink-50 text-pink-700"
-    }, {
-        key: "lime",
-        swatch: "bg-lime-400",
-        badge: "bg-lime-50 text-lime-700"
-    }, {
-        key: "orange",
-        swatch: "bg-orange-400",
-        badge: "bg-orange-50 text-orange-700"
-    }, {
-        key: "indigo",
-        swatch: "bg-indigo-400",
-        badge: "bg-indigo-50 text-indigo-700"
-    }, {
-        key: "blue-dark",
-        swatch: "bg-blue-700",
-        badge: "bg-blue-100 text-blue-800"
-    }, {
-        key: "emerald-dark",
-        swatch: "bg-emerald-700",
-        badge: "bg-emerald-100 text-emerald-800"
-    }, {
-        key: "rose-dark",
-        swatch: "bg-rose-700",
-        badge: "bg-rose-100 text-rose-800"
-    }, {
-        key: "amber-dark",
-        swatch: "bg-amber-700",
-        badge: "bg-amber-100 text-amber-800"
-    }, {
-        key: "purple-dark",
-        swatch: "bg-purple-700",
-        badge: "bg-purple-100 text-purple-800"
     }];
 
     function Ws(e) {
