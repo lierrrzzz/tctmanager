@@ -18478,8 +18478,9 @@ ${c}`
             [ae, ue] = (0, o.useState)(!1),
             [$, ke] = (0, o.useState)(!1),
             [M, de] = (0, o.useState)(!1),
+            [isDrag, setIsDrag] = (0, o.useState)(!1),
             Te = (I, W) => {
-                I.dataTransfer.setData("text/plain", W), I.dataTransfer.effectAllowed = "move"
+                I.dataTransfer.setData("text/plain", W), I.dataTransfer.effectAllowed = "move", setIsDrag(!0)
             },
             j = (I, W) => {
                 I.preventDefault();
@@ -18487,7 +18488,7 @@ ${c}`
                 X && n(Me => ({
                     ...Me,
                     [X]: W
-                })), H(null)
+                })), H(null), setIsDrag(!1)
             },
             he = I => {
                 r(W => W.filter(X => X.id !== I)), n(W => {
@@ -18500,8 +18501,14 @@ ${c}`
                 }), ya("groups", I)
             },
             le = v.filter(I => !s[I.id]),
+            lw = v.filter(I => s[I.id] === "__PAYOUT_WAIT__"),
             [showActions, setShowActions] = (0, o.useState)(!1),
-            [showDispo, setShowDispo] = (0, o.useState)(!1);
+            [showDispo, setShowDispo] = (0, o.useState)(!1),
+            [showWait, setShowWait] = (0, o.useState)(!1);
+        (0, o.useEffect)(() => {
+            let onEnd = () => setIsDrag(!1);
+            return window.addEventListener("dragend", onEnd), () => window.removeEventListener("dragend", onEnd)
+        }, []);
         return o.default.createElement("div", null, o.default.createElement("div", {
             className: "mb-6 flex items-start justify-between gap-3 flex-wrap"
         }, o.default.createElement("div", null, o.default.createElement("p", {
@@ -18524,6 +18531,7 @@ ${c}`
             className: "absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-semibold flex items-center justify-center"
         }, le.length), showDispo && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
             className: "fixed inset-0 z-10",
+            style: { pointerEvents: isDrag ? "none" : "auto" },
             onClick: I => {
                 I.stopPropagation(), setShowDispo(!1)
             }
@@ -18570,6 +18578,55 @@ ${c}`
         }))))))), o.default.createElement("div", {
             className: "relative"
         }, o.default.createElement("button", {
+            onClick: () => setShowWait(b => !b),
+            className: "relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500",
+            "aria-label": "Cuentas esperando payout"
+        }, o.default.createElement(Bs, {
+            size: 17
+        }), lw.length > 0 && o.default.createElement("span", {
+            className: "absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-white text-[10px] font-semibold flex items-center justify-center"
+        }, lw.length), showWait && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
+            className: "fixed inset-0 z-10",
+            style: { pointerEvents: isDrag ? "none" : "auto" },
+            onClick: I => {
+                I.stopPropagation(), setShowWait(!1)
+            }
+        }), o.default.createElement("div", {
+            onClick: I => I.stopPropagation(),
+            onDragOver: I => I.preventDefault(),
+            onDrop: I => {
+                I.preventDefault();
+                let X = I.dataTransfer.getData("text/plain");
+                X && n(Me => ({
+                    ...Me,
+                    [X]: "__PAYOUT_WAIT__"
+                })), setIsDrag(!1)
+            },
+            className: "fixed z-20 w-[420px] max-w-[92vw] rounded-2xl border border-slate-200 bg-white shadow-lg p-4",
+            style: { top: "88px", right: "24px" }
+        }, o.default.createElement("h3", {
+            className: "text-sm font-semibold text-slate-800 mb-1"
+        }, "Esperando payout"), o.default.createElement("p", {
+            className: "text-[11.5px] text-slate-400 mb-3"
+        }, "Arrastra aqu\xED las cuentas que est\xE1n a la espera de que se tramite su payout."), o.default.createElement("div", {
+            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1 min-h-[60px] rounded-xl border border-dashed border-slate-200 p-2"
+        }, lw.length === 0 && o.default.createElement("p", {
+            className: "text-[12px] text-slate-300 text-center py-6"
+        }, "Suelta aqu\xED una cuenta"), lw.map(I => o.default.createElement(_g, {
+            key: I.id,
+            account: I,
+            phases: t,
+            tags: m,
+            tagEvolution: y,
+            trades: c,
+            onDragStart: Te,
+            onView: u,
+            onEdit: d,
+            onQuickTrade: Q,
+            onEvolve: B
+        }))))))), o.default.createElement("div", {
+            className: "relative"
+        }, o.default.createElement("button", {
             onClick: () => setShowActions(b => !b),
             className: "w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors",
             "aria-label": "M\xE1s acciones"
@@ -18577,6 +18634,7 @@ ${c}`
             size: 18
         })), showActions && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
             className: "fixed inset-0 z-10",
+            style: { pointerEvents: isDrag ? "none" : "auto" },
             onClick: () => setShowActions(!1)
         }), o.default.createElement("div", {
             className: "fixed z-20 w-64 rounded-2xl border border-slate-200 bg-white shadow-lg p-2 flex flex-col gap-1",
