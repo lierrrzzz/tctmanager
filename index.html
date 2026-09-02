@@ -18523,6 +18523,8 @@ ${c}`
             className: "relative"
         }, o.default.createElement("button", {
             onClick: () => setShowDispo(b => !b),
+            onDragEnter: () => isDrag && setShowDispo(!0),
+            onDragOver: I => isDrag && I.preventDefault(),
             className: "relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500",
             "aria-label": "Cuentas sin grupo"
         }, o.default.createElement(InboxIco, {
@@ -18537,29 +18539,14 @@ ${c}`
             }
         }), o.default.createElement("div", {
             onClick: I => I.stopPropagation(),
+            onDragLeave: I => {
+                I.currentTarget.contains(I.relatedTarget) || setShowDispo(!1)
+            },
             className: "fixed z-20 w-[420px] max-w-[92vw] rounded-2xl border border-slate-200 bg-white shadow-lg p-4",
             style: { top: "88px", right: "24px" }
-        }, o.default.createElement("div", {
-            className: "flex items-center justify-between mb-3"
         }, o.default.createElement("h3", {
-            className: "text-sm font-semibold text-slate-800"
+            className: "text-sm font-semibold text-slate-800 mb-3"
         }, "Cuentas disponibles"), o.default.createElement("div", {
-            className: "flex items-center gap-1"
-        }, o.default.createElement("button", {
-            onClick: () => ue(!0),
-            className: "w-6 h-6 rounded-lg border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-50",
-            "aria-label": "A\xF1adir varias cuentas",
-            title: "A\xF1adir varias cuentas"
-        }, o.default.createElement(Ds, {
-            size: 12
-        })), o.default.createElement("button", {
-            onClick: l,
-            className: "w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800",
-            "aria-label": "A\xF1adir cuenta",
-            title: "A\xF1adir una cuenta"
-        }, o.default.createElement(Be, {
-            size: 14
-        })))), o.default.createElement("div", {
             className: "space-y-2 max-h-[420px] overflow-y-auto pr-1"
         }, le.length === 0 && o.default.createElement("p", {
             className: "text-[12px] text-slate-300 text-center py-6"
@@ -18579,6 +18566,8 @@ ${c}`
             className: "relative"
         }, o.default.createElement("button", {
             onClick: () => setShowWait(b => !b),
+            onDragEnter: () => isDrag && setShowWait(!0),
+            onDragOver: I => isDrag && I.preventDefault(),
             className: "relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500",
             "aria-label": "Cuentas esperando payout"
         }, o.default.createElement(Bs, {
@@ -18594,6 +18583,9 @@ ${c}`
         }), o.default.createElement("div", {
             onClick: I => I.stopPropagation(),
             onDragOver: I => I.preventDefault(),
+            onDragLeave: I => {
+                I.currentTarget.contains(I.relatedTarget) || setShowWait(!1)
+            },
             onDrop: I => {
                 I.preventDefault();
                 let X = I.dataTransfer.getData("text/plain");
@@ -18605,14 +18597,12 @@ ${c}`
             className: "fixed z-20 w-[420px] max-w-[92vw] rounded-2xl border border-slate-200 bg-white shadow-lg p-4",
             style: { top: "88px", right: "24px" }
         }, o.default.createElement("h3", {
-            className: "text-sm font-semibold text-slate-800 mb-1"
-        }, "Esperando payout"), o.default.createElement("p", {
-            className: "text-[11.5px] text-slate-400 mb-3"
-        }, "Arrastra aqu\xED las cuentas que est\xE1n a la espera de que se tramite su payout."), o.default.createElement("div", {
-            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1 min-h-[60px] rounded-xl border border-dashed border-slate-200 p-2"
+            className: "text-sm font-semibold text-slate-800 mb-3"
+        }, "Esperando payout"), o.default.createElement("div", {
+            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1"
         }, lw.length === 0 && o.default.createElement("p", {
             className: "text-[12px] text-slate-300 text-center py-6"
-        }, "Suelta aqu\xED una cuenta"), lw.map(I => o.default.createElement(_g, {
+        }, "Arrastra aqu\xED cuentas a la espera de payout"), lw.map(I => o.default.createElement(_g, {
             key: I.id,
             account: I,
             phases: t,
@@ -18640,6 +18630,20 @@ ${c}`
             className: "fixed z-20 w-64 rounded-2xl border border-slate-200 bg-white shadow-lg p-2 flex flex-col gap-1",
             style: { top: "88px", right: "24px" }
         }, o.default.createElement("button", {
+            onClick: () => {
+                l(), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Be, {
+            size: 15
+        }), " A\xF1adir cuenta"), o.default.createElement("button", {
+            onClick: () => {
+                ue(!0), setShowActions(!1)
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Ds, {
+            size: 15
+        }), " A\xF1adir varias cuentas"), o.default.createElement("button", {
             onClick: () => {
                 T(!0), setShowActions(!1)
             },
