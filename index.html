@@ -16645,6 +16645,28 @@ ${c}`
             key: "1gmf2c"
         }]
     ]);
+var CalendarIco = ee("Calendar", [
+        ["path", {
+            d: "M8 2v4",
+            key: "cal1"
+        }],
+        ["path", {
+            d: "M16 2v4",
+            key: "cal2"
+        }],
+        ["rect", {
+            width: "18",
+            height: "18",
+            x: "3",
+            y: "4",
+            rx: "2",
+            key: "cal3"
+        }],
+        ["path", {
+            d: "M3 10h18",
+            key: "cal4"
+        }]
+    ]);
     var InboxIco = ee("Inbox", [
         ["path", {
             d: "M22 12h-6l-2 3h-4l-2-3H2",
@@ -17087,6 +17109,10 @@ ${c}`
         id: "bankroll",
         label: "Bankroll",
         icon: xo
+    }, {
+        id: "calendario",
+        label: "Calendario",
+        icon: CalendarIco
     }, {
         id: "etiquetas",
         label: "Etiquetas",
@@ -21495,13 +21521,21 @@ ${c}`
         trades: l,
         setTrades: i
     }) {
-        let [u, d] = (0, o.useState)(null), [f, p] = (0, o.useState)(!1), [x, m] = (0, o.useState)(!1), [y, g] = (0, o.useState)(!1), [w, c] = (0, o.useState)(null), h = e.filter(T => !s[T.id]), v = (T, K) => T.dataTransfer.setData("text/plain", K), b = (T, K) => {
+        let [u, d] = (0, o.useState)(null), [f, p] = (0, o.useState)(!1), [x, m] = (0, o.useState)(!1), [y, g] = (0, o.useState)(!1), [w, c] = (0, o.useState)(null), h = e.filter(T => !s[T.id]),
+            [isDragBT, setIsDragBT] = (0, o.useState)(!1),
+            [showActionsBT, setShowActionsBT] = (0, o.useState)(!1),
+            [showDispoBT, setShowDispoBT] = (0, o.useState)(!1),
+            [closingActionsBT, setClosingActionsBT] = (0, o.useState)(!1),
+            [closingDispoBT, setClosingDispoBT] = (0, o.useState)(!1),
+            closeActionsBT = () => { setClosingActionsBT(!0); setTimeout(() => { setShowActionsBT(!1), setClosingActionsBT(!1) }, 150) },
+            closeDispoBT = () => { setClosingDispoBT(!0); setTimeout(() => { setShowDispoBT(!1), setClosingDispoBT(!1) }, 150) },
+            v = (T, K) => { T.dataTransfer.setData("text/plain", K), setIsDragBT(!0) }, b = (T, K) => {
             T.preventDefault(), d(null);
             let E = T.dataTransfer.getData("text/plain");
             E && n(L => ({
                 ...L,
                 [E]: K
-            }))
+            })), setIsDragBT(!1)
         }, A = T => {
             window.confirm("\xBFEliminar este grupo de backtesting? Las cuentas volver\xE1n a Cuentas disponibles.") && (r(K => K.filter(E => E.id !== T)), n(K => {
                 let E = {
@@ -21557,6 +21591,10 @@ ${c}`
                 totalAccounts: e.length
             }
         }, [e, l]);
+        (0, o.useEffect)(() => {
+            let onEnd = () => setIsDragBT(!1);
+            return window.addEventListener("dragend", onEnd), () => window.removeEventListener("dragend", onEnd)
+        }, []);
         return o.default.createElement("div", null, o.default.createElement("div", {
             className: "mb-6 flex items-start justify-between gap-3"
         }, o.default.createElement("div", null, o.default.createElement("p", {
@@ -21565,15 +21603,91 @@ ${c}`
             className: "text-2xl font-semibold text-slate-900 mt-1"
         }, "Backtesting"), o.default.createElement("p", {
             className: "text-sm text-slate-500 mt-1"
-        }, "Crea cuentas y grupos de prueba para practicar, totalmente aislado del resto de la app.")), e.length > 0 && o.default.createElement("button", {
+        }, "Crea cuentas y grupos de prueba para practicar, totalmente aislado del resto de la app.")), o.default.createElement("div", {
+            className: "flex items-center gap-2"
+        }, e.length > 0 && o.default.createElement("button", {
             onClick: () => H(!0),
             className: "shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors"
         }, o.default.createElement(xa, {
             size: 14
-        }), " Resumen de la sesi\xF3n")), o.default.createElement("div", {
+        }), " Resumen de la sesi\xF3n"), o.default.createElement("div", {
+            className: "relative"
+        }, o.default.createElement("button", {
+            onClick: () => showDispoBT ? closeDispoBT() : setShowDispoBT(!0),
+            onDragEnter: () => isDragBT && setShowDispoBT(!0),
+            onDragOver: T => isDragBT && T.preventDefault(),
+            className: "relative w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500",
+            "aria-label": "Cuentas de prueba sin grupo"
+        }, o.default.createElement(InboxIco, {
+            size: 17
+        }), h.length > 0 && o.default.createElement("span", {
+            className: "absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-semibold flex items-center justify-center"
+        }, h.length), (showDispoBT || closingDispoBT) && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
+            className: "fixed inset-0 z-10",
+            style: { pointerEvents: isDragBT ? "none" : "auto" },
+            onClick: T => {
+                T.stopPropagation(), closeDispoBT()
+            }
+        }), o.default.createElement("div", {
+            onClick: T => T.stopPropagation(),
+            onDragOver: T => T.preventDefault(),
+            onDragLeave: T => {
+                T.currentTarget.contains(T.relatedTarget) || closeDispoBT()
+            },
+            onDrop: T => b(T, null),
+            className: "fixed z-20 w-[420px] max-w-[92vw] rounded-2xl border border-slate-200 bg-white shadow-lg p-4",
+            style: { top: "88px", right: "24px", transformOrigin: "top right", animation: closingDispoBT ? "popOut 150ms ease-in forwards" : "popIn 150ms ease-out forwards" }
+        }, o.default.createElement("h3", {
+            className: "text-sm font-semibold text-slate-800 mb-3"
+        }, "Cuentas de prueba"), o.default.createElement("div", {
+            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1"
+        }, h.length === 0 && o.default.createElement("p", {
+            className: "text-[12px] text-slate-300 text-center py-6"
+        }, e.length === 0 ? "Todav\xEDa no has creado ninguna cuenta de prueba" : "Todas las cuentas est\xE1n asignadas"), h.map(T => o.default.createElement(r0, {
+            key: T.id,
+            account: T,
+            onDragStart: v,
+            onEdit: c
+        }))))))), o.default.createElement("div", {
+            className: "relative"
+        }, o.default.createElement("button", {
+            onClick: () => showActionsBT ? closeActionsBT() : setShowActionsBT(!0),
+            className: "w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors",
+            "aria-label": "M\xE1s acciones"
+        }, o.default.createElement(Be, {
+            size: 18
+        })), (showActionsBT || closingActionsBT) && o.default.createElement(o.default.Fragment, null, o.default.createElement("div", {
+            className: "fixed inset-0 z-10",
+            style: { pointerEvents: isDragBT ? "none" : "auto" },
+            onClick: () => closeActionsBT()
+        }), o.default.createElement("div", {
+            className: "fixed z-20 w-64 rounded-2xl border border-slate-200 bg-white shadow-lg p-2 flex flex-col gap-1",
+            style: { top: "88px", right: "24px", transformOrigin: "top right", animation: closingActionsBT ? "popOut 150ms ease-in forwards" : "popIn 150ms ease-out forwards" }
+        }, o.default.createElement("button", {
+            onClick: () => {
+                p(!0), closeActionsBT()
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Be, {
+            size: 15
+        }), " A\xF1adir grupo"), o.default.createElement("button", {
+            onClick: () => {
+                g(!0), closeActionsBT()
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Be, {
+            size: 15
+        }), " A\xF1adir movimiento"), o.default.createElement("button", {
+            onClick: () => {
+                m(!0), closeActionsBT()
+            },
+            className: "flex items-center gap-2 text-[13px] font-medium text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 text-left"
+        }, o.default.createElement(Be, {
+            size: 15
+        }), " A\xF1adir cuenta")))))), o.default.createElement("div", {
             className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-start mb-4"
         }, a.length === 0 && o.default.createElement("div", {
-            className: "sm:col-span-2 lg:col-span-3 xl:col-span-5 rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"
+            className: "sm:col-span-2 lg:col-span-3 xl:col-span-6 rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center"
         }, o.default.createElement("p", {
             className: "text-[13px] text-slate-400"
         }, "Todav\xEDa no has creado ning\xFAn grupo de backtesting."), o.default.createElement("button", {
@@ -21621,47 +21735,7 @@ ${c}`
                 })),
                 onEdit: c
             }))))
-        }), o.default.createElement("div", {
-            className: "flex flex-col gap-4"
-        }, o.default.createElement("div", {
-            className: "rounded-2xl border border-slate-200 bg-white p-4 flex flex-col gap-2 justify-center"
-        }, o.default.createElement("button", {
-            onClick: () => p(!0),
-            className: "flex items-center justify-center gap-1.5 bg-slate-900 text-white text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-800"
-        }, o.default.createElement(Be, {
-            size: 15
-        }), " A\xF1adir grupo"), o.default.createElement("button", {
-            onClick: () => g(!0),
-            className: "flex items-center justify-center gap-1.5 border border-slate-200 text-slate-600 text-[13px] font-medium px-3.5 py-2 rounded-xl hover:bg-slate-50"
-        }, o.default.createElement(Be, {
-            size: 15
-        }), " A\xF1adir movimiento")), o.default.createElement("div", {
-            onDragOver: T => {
-                T.preventDefault(), d("disponibles")
-            },
-            onDragLeave: () => d(T => T === "disponibles" ? null : T),
-            onDrop: T => b(T, null),
-            className: `rounded-2xl border bg-white p-4 transition-colors ${u==="disponibles"?"border-blue-400 bg-blue-50/40":"border-slate-200"}`
-        }, o.default.createElement("div", {
-            className: "flex items-center justify-between mb-3"
-        }, o.default.createElement("h3", {
-            className: "text-sm font-semibold text-slate-800"
-        }, "Cuentas de prueba"), o.default.createElement("button", {
-            onClick: () => m(!0),
-            className: "w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800",
-            "aria-label": "A\xF1adir cuenta"
-        }, o.default.createElement(Be, {
-            size: 14
-        }))), o.default.createElement("div", {
-            className: "space-y-2 max-h-[420px] overflow-y-auto pr-1"
-        }, h.length === 0 && o.default.createElement("p", {
-            className: "text-[12px] text-slate-300 text-center py-6"
-        }, e.length === 0 ? "Todav\xEDa no has creado ninguna cuenta de prueba" : "Todas las cuentas est\xE1n asignadas"), h.map(T => o.default.createElement(r0, {
-            key: T.id,
-            account: T,
-            onDragStart: v,
-            onEdit: c
-        })))))), f && o.default.createElement(jw, {
+        })), f && o.default.createElement(jw, {
             onClose: () => p(!1),
             onSave: T => r(K => [...K, T])
         }), x && o.default.createElement(a0, {
@@ -21941,6 +22015,18 @@ ${c}`
         sub: "Eliminar todos tus datos",
         icon: Le
     }];
+
+function CalendarioPage() {
+        return o.default.createElement("div", null, o.default.createElement("p", {
+            className: "text-[11px] font-semibold tracking-wide text-slate-400 uppercase"
+        }, "Vista global"), o.default.createElement("h2", {
+            className: "text-2xl font-semibold text-slate-900 mt-1"
+        }, "Calendario"), o.default.createElement("div", {
+            className: "rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center mt-4"
+        }, o.default.createElement("p", {
+            className: "text-[13px] text-slate-400"
+        }, "Todav\xEDa sin definir \u2014 lo trabajamos m\xE1s adelante.")))
+    }
 
     function Fw({
         settings: e,
@@ -23303,7 +23389,8 @@ ${c}`
         }, o.default.createElement("span", {
             className: "w-2 h-2 rounded-full bg-amber-400 animate-pulse"
         }), "Guardando\u2026"), o.default.createElement("aside", {
-            className: `shrink-0 bg-white border-r border-slate-200 flex flex-col h-full relative transition-all duration-300 ease-in-out ${f?"w-[76px]":"w-64"}`,
+            className: `shrink-0 bg-white border-r border-slate-200 flex flex-col h-full relative ${f?"w-[76px]":"w-64"}`,
+            style: { transition: "width 450ms cubic-bezier(0.22, 1, 0.36, 1)" },
             onMouseEnter: () => p(!1),
             onMouseLeave: () => p(!0)
         }, o.default.createElement("div", {
@@ -23399,7 +23486,7 @@ ${c}`
             accounts: x,
             settings: M,
             setSettings: de
-        }), u === "etiquetas" && o.default.createElement(Fw, {
+        }), u === "calendario" && o.default.createElement(CalendarioPage, null), u === "etiquetas" && o.default.createElement(Fw, {
             settings: M,
             setSettings: de,
             phases: h
